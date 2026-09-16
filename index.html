@@ -532,6 +532,38 @@
   .draw-result span{font-size:15px;color:#6b7a70;font-weight:400;}
   .draw-empty{font-size:17px;font-weight:700;color:var(--danger);}
   .draw-close-btn{margin-top:18px;}
+
+  .order-card{
+    background:linear-gradient(135deg, #fff 0%, #eef3ee 100%);
+    border:1px solid var(--sand-deep);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .order-card h3{margin:0 0 8px;font-size:15px;color:var(--green-deep);}
+  .order-hint{font-size:12.5px;color:#6b7a70;margin-bottom:10px;}
+  .order-list{margin-top:12px;}
+  .order-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 4px;
+    border-bottom:1px dashed var(--sand-deep);
+    font-size:14px;
+  }
+  .order-row:last-child{border-bottom:none;}
+  .order-rank{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--green);
+    color:#fff;
+    font-weight:900;
+    font-size:12.5px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .order-name{font-weight:700;color:var(--ink);}
+  .order-empty{font-size:12.5px;color:#8a9088;text-align:center;padding:8px 0;}
 </style>
 </head>
 <body>
@@ -598,6 +630,13 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="halaqah-tabs" id="halaqahTabs"></div>
 
   <div id="drawSection"></div>
+
+  <div class="order-card">
+    <h3>🔀 ترتيب عشوائي لدور الطلاب</h3>
+    <p class="order-hint">اضغطي الزر لترتيب طلاب هالحلقة عشوائيًا لتحديد دور التسميع.</p>
+    <button class="btn btn-green btn-block" id="shuffleOrderBtn">🎲 رتّبي الطلاب عشوائيًا</button>
+    <div class="order-list" id="orderList"></div>
+  </div>
 
   <div class="lb-card">
     <div class="lb-head">
@@ -858,6 +897,7 @@ async function switchHalaqah(id){
   renderStudents();
   renderLeaderboard();
   renderDrawSection();
+  clearOrderList();
 
   const logPanel = document.getElementById('logPanel');
   const toggleLogBtn = document.getElementById('toggleLogBtn');
@@ -1847,6 +1887,71 @@ async function startDraw(studentId){
   }
 }
 
+// --- ترتيب عشوائي لدور الطلاب ---
+// عشان يشتغل نفس الترتيب لأي حدا يفتح الرابط بنفس اللحظة (متزامن عبر
+// الأجهزة)، منخزّن نتيجة آخر ترتيب بقاعدة البيانات المشتركة تبع الحلقة
+// الحالية، بدل ما يضل الترتيب محصور بجهاز اللي ضغط الزر بس.
+function orderKey(){
+  return currentHalaqahId === 'h1' ? 'sawaed-order' : ('sawaed-order-' + currentHalaqahId);
+}
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderOrderRows(names){
+  const panel = document.getElementById('orderList');
+  if(!panel) return;
+  if(!names.length){
+    panel.innerHTML = '<p class="order-empty">ضيفي أسماء الطلاب أول، بعدين رتّبيهم عشوائيًا.</p>';
+    return;
+  }
+  panel.innerHTML = names.map((name, i)=>`
+    <div class="order-row">
+      <span class="order-rank">${i+1}</span>
+      <span class="order-name">${name}</span>
+    </div>
+  `).join('');
+}
+
+function clearOrderList(){
+  const panel = document.getElementById('orderList');
+  if(panel) panel.innerHTML = '';
+}
+
+async function loadSavedOrder(){
+  try{
+    const res = await window.storage.get(orderKey(), false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(Array.isArray(parsed) && parsed.length){
+        renderOrderRows(parsed);
+        return;
+      }
+    }
+  }catch(e){ /* ما في ترتيب محفوظ بعد لهاي الحلقة */ }
+  clearOrderList();
+}
+
+async function shuffleStudentOrder(){
+  const names = config.students.map(s => (s.name||'').trim()).filter(Boolean);
+  if(!names.length){
+    alert('ضيفي أسماء الطلاب أول قبل ما ترتّبيهم عشوائيًا.');
+    return;
+  }
+  const shuffled = shuffleArray(names);
+  renderOrderRows(shuffled);
+  const ok = await safeStorageSet(orderKey(), JSON.stringify(shuffled));
+  if(!ok){
+    showSaveStatus('⚠️ اترتب الطلاب بس تعذّر حفظ الترتيب للمشاركة', true);
+  }
+}
+
 async function onDateChange(){
   currentDate = document.getElementById('dateInput').value || currentDate;
   document.getElementById('dayTag').textContent = fmtDateLabel(currentDate);
@@ -1866,9 +1971,11 @@ async function init(){
   document.getElementById('sendGroupBtn').addEventListener('click', sendToGroup);
   document.getElementById('resetPagesBtn').addEventListener('click', resetPagesTotals);
   document.getElementById('addStudentBtn').addEventListener('click', addNewStudent);
+  document.getElementById('shuffleOrderBtn').addEventListener('click', shuffleStudentOrder);
   initLeaderboardTabs();
   renderLeaderboard();
   renderDrawSection();
+  await loadSavedOrder();
 
   const drawCloseBtn = document.getElementById('drawCloseBtn');
   if(drawCloseBtn){
