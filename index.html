@@ -564,6 +564,22 @@
   }
   .order-name{font-weight:700;color:var(--ink);}
   .order-empty{font-size:12.5px;color:#8a9088;text-align:center;padding:8px 0;}
+    .monthly-card{
+    background:linear-gradient(135deg, #fff 0%, #f3eefb 100%);
+    border:1px solid var(--gold-soft);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .monthly-card h3{margin:0 0 8px;font-size:15px;color:var(--green-deep);}
+  .monthly-sub{font-size:12.5px;color:#6b7a70;margin:10px 0 6px;font-weight:700;}
+  .monthly-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:6px 4px;border-bottom:1px dashed var(--sand-deep);font-size:13.5px;
+  }
+  .monthly-row:last-child{border-bottom:none;}
+  .monthly-count{font-weight:700;color:var(--gold);}
+  .monthly-winner{font-size:12.5px;color:#4b5750;padding:4px 0;border-bottom:1px dashed var(--sand-deep);}
 </style>
 </head>
 <body>
@@ -630,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="halaqah-tabs" id="halaqahTabs"></div>
 
   <div id="drawSection"></div>
-
+  <div id="monthlySection"></div>
   <div class="order-card">
     <h3>🔀 ترتيب عشوائي لدور الطلاب</h3>
     <p class="order-hint">اضغطي الزر لترتيب طلاب هالحلقة عشوائيًا لتحديد دور التسميع.</p>
@@ -897,6 +913,7 @@ async function switchHalaqah(id){
   renderStudents();
   renderLeaderboard();
   renderDrawSection();
+    renderMonthlySection();
   clearOrderList();
 
   const logPanel = document.getElementById('logPanel');
@@ -1951,7 +1968,139 @@ async function shuffleStudentOrder(){
     showSaveStatus('⚠️ اترتب الطلاب بس تعذّر حفظ الترتيب للمشاركة', true);
   }
 }
+// --- الجائزة الشهرية (قائمة مشتركة لكل الشعب) ---
+const MONTHLY_KEY = 'sawaed-monthly-prizes';
+const DEFAULT_MONTHLY_PRIZES = [
+  { id: 'perfume',  label: '🌸 عطر بقيمة 3 دنانير',   count: 3 },
+  { id: 'activity', label: '🎨 نشاط مجاني',            count: 3 },
+  { id: 'grand',    label: '🌟 التأهل للجائزة الكبرى', count: 2 },
+  { id: 'shop',     label: '🛒 مشتريات بنصف دينار',   count: 4 },
+  { id: 'football', label: '⚽ كرة قدم',               count: 2 },
+  { id: 'mug',      label: '☕ مج حراري',              count: 2 },
+  { id: 'two',      label: '💵 ديناران',               count: 3 },
+  { id: 'shawarma', label: '🍔 وجبة شاورما',           count: 3 }
+];
 
+let monthlyData = null; // { pool: {id: count}, winners: [...] }
+
+function freshMonthlyData(){
+  const pool = {};
+  DEFAULT_MONTHLY_PRIZES.forEach(p => pool[p.id] = p.count);
+  return { pool, winners: [] };
+}
+
+async function loadMonthlyPool(){
+  let data = null;
+  try{
+    const res = await window.storage.get(MONTHLY_KEY, true);
+    if(res && res.value) data = JSON.parse(res.value);
+  }catch(e){ /* أول مرة */ }
+  if(!data || !data.pool){
+    data = freshMonthlyData();
+    await safeStorageSet(MONTHLY_KEY, JSON.stringify(data));
+  }
+  if(!Array.isArray(data.winners)) data.winners = [];
+  monthlyData = data;
+  return data;
+}
+
+async function saveMonthlyData(){
+  const ok = await safeStorageSet(MONTHLY_KEY, JSON.stringify(monthlyData));
+  if(!ok) showSaveStatus('⚠️ تعذّر حفظ الجائزة الشهرية، جرّبي مرة ثانية', true);
+  return ok;
+}
+
+function renderMonthlySection(){
+  const wrap = document.getElementById('monthlySection');
+  if(!wrap) return;
+  if(!monthlyData){ wrap.innerHTML = ''; return; }
+  const named = config.students.filter(s => (s.name||'').trim());
+  const available = DEFAULT_MONTHLY_PRIZES.filter(p => (monthlyData.pool[p.id]||0) > 0);
+  const total = available.reduce((s,p) => s + monthlyData.pool[p.id], 0);
+  const lastWinners = monthlyData.winners.slice(-8).reverse();
+
+  wrap.innerHTML = `
+    <div class="monthly-card">
+      <h3>🏅 الجائزة الشهرية (مشتركة لكل الشعب)</h3>
+      <div class="draw-row">
+        <select id="monthlyStudentSelect">
+          ${named.length ? named.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '<option value="">لا يوجد طلاب بعد</option>'}
+        </select>
+      </div>
+      <button class="btn btn-gold btn-block" id="monthlyDrawBtn" ${(!named.length || total===0) ? 'disabled' : ''}>🎲 اسحب الجائزة الشهرية!</button>
+
+      <p class="monthly-sub">الجوائز المتاحة (${total})</p>
+      ${available.length ? available.map(p => `
+        <div class="monthly-row">
+          <span>${p.label}</span>
+          <span class="monthly-count">× ${monthlyData.pool[p.id]}</span>
+        </div>`).join('') : '<p class="log-empty">نفذت كل الجوائز 😢</p>'}
+
+      ${lastWinners.length ? `
+        <p class="monthly-sub">آخر الفائزين</p>
+        ${lastWinners.map(w => `<div class="monthly-winner">${w.student} (${w.halaqah}) — ${w.prize}</div>`).join('')}
+      ` : ''}
+
+      <button class="btn btn-outline btn-block" style="margin-top:12px;" id="monthlyRefillBtn">🔄 تعبئة الجوائز من جديد (شهر جديد)</button>
+    </div>
+  `;
+
+  document.getElementById('monthlyDrawBtn').addEventListener('click', ()=>{
+    const sel = document.getElementById('monthlyStudentSelect');
+    if(sel && sel.value) startMonthlyDraw(sel.value);
+  });
+  document.getElementById('monthlyRefillBtn').addEventListener('click', refillMonthlyPool);
+}
+
+async function startMonthlyDraw(studentId){
+  const student = config.students.find(s => s.id === studentId);
+  if(!student) return;
+
+  const modal = document.getElementById('drawModal');
+  const stage = document.getElementById('drawStage');
+  modal.style.display = 'flex';
+
+  for(const n of [3,2,1]){
+    stage.innerHTML = `<div class="draw-count">${n}</div>`;
+    await sleep(650);
+  }
+
+  // نقرأ أحدث نسخة من السحابة قبل السحب، عشان لو حدا ثاني سحب من شعبة ثانية
+  await loadMonthlyPool();
+
+  const bag = [];
+  DEFAULT_MONTHLY_PRIZES.forEach(p => {
+    for(let i=0; i<(monthlyData.pool[p.id]||0); i++) bag.push(p);
+  });
+
+  if(!bag.length){
+    stage.innerHTML = '<div class="draw-empty">😢 نفذت كل الجوائز الشهرية!</div>';
+    renderMonthlySection();
+    return;
+  }
+
+  const prize = bag[Math.floor(Math.random() * bag.length)];
+  monthlyData.pool[prize.id] -= 1;
+  const h = halaqat.find(x => x.id === currentHalaqahId);
+  monthlyData.winners.push({
+    student: student.name,
+    halaqah: h ? h.name : '',
+    prize: prize.label,
+    date: new Date().toISOString().slice(0,10)
+  });
+  await saveMonthlyData();
+
+  stage.innerHTML = `<div class="draw-result">🎉<br>${prize.label}<br><span>لـ ${student.name}</span></div>`;
+  renderMonthlySection();
+}
+
+async function refillMonthlyPool(){
+  if(!confirm('متأكدة إنك بدك تعبّي الجوائز الشهرية من جديد؟ رح يتصفّر سجل الفائزين كمان.')) return;
+  monthlyData = freshMonthlyData();
+  await saveMonthlyData();
+  renderMonthlySection();
+  showSaveStatus('✅ تمت تعبئة الجوائز الشهرية من جديد', false);
+}
 async function onDateChange(){
   currentDate = document.getElementById('dateInput').value || currentDate;
   document.getElementById('dayTag').textContent = fmtDateLabel(currentDate);
@@ -1962,6 +2111,8 @@ async function onDateChange(){
 async function init(){
   await loadHalaqat();
   renderHalaqahTabs();
+  await loadMonthlyPool();
+  renderMonthlySection();
   await loadConfig();
   document.getElementById('groupLinkInput').value = config.groupLink || '';
   document.getElementById('groupLinkInput').addEventListener('change', async (e)=>{
