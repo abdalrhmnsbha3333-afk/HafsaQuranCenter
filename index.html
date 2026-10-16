@@ -347,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function(){
   <div id="monthlySection"></div>
   <div class="order-card">
     <h3>🔀 ترتيب عشوائي لدور الطلاب</h3>
-    <p class="order-hint">اضغطي الزر لترتيب طلاب هالحلقة عشوائيًا لتحديد دور التسميع.</p>
     <button class="btn btn-green btn-block" id="shuffleOrderBtn">🎲 رتّبي الطلاب عشوائيًا</button>
     <div class="order-list" id="orderList"></div>
   </div>
@@ -377,16 +376,11 @@ document.addEventListener('DOMContentLoaded', function(){
       <input id="groupLinkInput" type="text" placeholder="الصق رابط دعوة المجموعة هون (chat.whatsapp.com/....)">
     </div>
     <button class="btn btn-gold btn-block" id="sendGroupBtn">إرسال جدول اليوم كامل للمجموعة</button>
-    <p class="hint">
-      بتتنسخ صورة جدول كل الطلاب لهذا اليوم للحافظة تلقائيًا، وبتفتح محادثة المجموعة على واتساب — بس اعملي لصق (Ctrl+V أو ضغطة مطوّلة ← لصق) بمربع الكتابة.<br>
-      لجيب رابط الدعوة: افتحي المجموعة على واتساب ← معلومات المجموعة ← دعوة عبر رابط ← نسخ الرابط.
-    </p>
   </div>
 
   <div id="studentsList"></div>
 
   <button class="btn btn-outline btn-block" id="addStudentBtn" style="margin-bottom:10px;">➕ إضافة طالب جديد</button>
-  <p class="empty-note">تقدري تعدّلي اسم أي طالب أو رقمه بالضغط عليه مباشرة.</p>
 
   <div class="log-card">
     <h3>📖 سجل الأيام السابقة</h3>
@@ -1974,7 +1968,7 @@ init();
   card.className = 'exam-card'; card.id = 'examCard';
   card.innerHTML = `
     <h3>📝 الامتحانات <span class="ex-note">(مستقلة عن الشعب)</span></h3>
-    <p class="ex-hint">اختاري الأجزاء، وبيطلع للطالب مواضع بأرقام يختار منها. بعد ما يخلص بتتغير كل مواضع هالأجزاء تلقائيًا، فاللي بعده ما بينفعه غش.</p>
+    <p class="ex-hint">.</p>
     <button class="btn btn-gold btn-block" id="startExamBtn">▶ بدء امتحان طالب</button>
     <button class="btn btn-outline btn-block" style="margin-top:8px;" id="examLogBtn">📜 سجل الامتحانات</button>
     <div id="examLogPanel" style="display:none"></div>`;
