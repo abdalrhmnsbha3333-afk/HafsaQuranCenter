@@ -1860,5 +1860,276 @@ async function init(){
 
 init();
 </script>
+
+<!-- ===================== قسم الامتحانات =====================
+  بيضيف لحاله: الكرت + النافذة + التنسيق، وبيستخدم نفس قاعدة البيانات (window.storage).
+================================================================ -->
+<style>
+  .exam-card{background:linear-gradient(135deg,#fff 0%,#eaf1ec 100%);border:1.5px solid var(--green);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+  .exam-card h3{margin:0 0 6px;font-size:15px;color:var(--green-deep);}
+  .ex-hint{font-size:12.5px;color:#6b7a70;line-height:1.7;margin:0 0 10px;}
+  .exam-modal{position:fixed;inset:0;background:rgba(31,42,36,.78);display:none;align-items:center;justify-content:center;z-index:950;padding:12px;}
+  .exam-box{background:var(--sand);border-radius:16px;width:100%;max-width:560px;max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+  .exam-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--green);color:#fff;font-weight:700;}
+  .ex-x{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;font-family:inherit;}
+  #examBody{padding:14px 16px 18px;}
+  .ex-lbl{display:block;font-size:12.5px;font-weight:700;color:#6b7a70;margin-bottom:4px;}
+  .ex-input{width:100%;border:1px solid var(--sand-deep);border-radius:9px;padding:10px 11px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink);margin-bottom:12px;}
+  .ex-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13.5px;}
+  .ex-row b{flex:1;color:var(--green-deep);}
+  .ex-mini{border:1.5px solid var(--green);background:transparent;color:var(--green-deep);border-radius:8px;padding:4px 10px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;}
+  .ex-juz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:14px;}
+  .ex-juz{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--sand-deep);border-radius:9px;padding:7px 8px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .ex-juz:has(input:checked){border-color:var(--gold);background:var(--gold-soft);}
+  .ex-who{font-weight:700;color:var(--green-deep);margin-bottom:10px;font-size:15px;}
+  .ex-sec{background:#fff;border:1px solid var(--sand-deep);border-radius:12px;padding:12px;margin-bottom:12px;}
+  .ex-sec-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;color:var(--green-deep);font-size:14px;}
+  .ex-slots{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;}
+  .ex-slot{border:1.5px solid var(--sand-deep);background:var(--sand);color:var(--green-deep);border-radius:8px;padding:7px 0;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+  .ex-slot.on{background:var(--gold);border-color:var(--gold);color:#fff;cursor:default;}
+  .ex-slot.wait{opacity:.5;}
+  .ex-pick{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px dashed var(--sand-deep);font-size:13.5px;line-height:1.7;}
+  .ex-pick:first-child{margin-top:8px;}
+  .ex-n{flex:0 0 auto;min-width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center;}
+  .ex-note{font-size:11.5px;color:#8a9088;}
+  .ex-log{border:1px solid var(--sand-deep);border-radius:10px;padding:8px 10px;margin-top:8px;background:#fff;font-size:12.5px;}
+  .ex-log-h{display:flex;justify-content:space-between;color:var(--green-deep);margin-bottom:4px;}
+  .ex-log-l{color:#4b5750;line-height:1.7;}
+</style>
+
+<script type="module">
+(function(){
+  const JUZ = ["الجزء 1 (آلَمَ)", "الجزء 2 (سَيَقُولُ)", "الجزء 3 (تِلْكَ الرُّسُلُ)", "الجزء 4 (كُلُّ الطَّعَامِ)", "الجزء 5 (وَالْمُحْصَنَاتُ)", "الجزء 6 (لا يُحِبُّ اللَّهُ)", "الجزء 7 (وَإِذَا سَمِعُوا)", "الجزء 8 (وَلَوْ أَنَّنَا)", "الجزء 9 (قَالَ الْمَلأُ)", "الجزء 10 (وَاعْلَمُوا)", "الجزء 11 (يَعْتَذِرُونَ)", "الجزء 12 (وَمَا مِنْ دَابَّةٍ)", "الجزء 13 (وَمَا أُبَرِّئُ)", "الجزء 14 (رُبَمَا)", "الجزء 15 (سُبْحَانَ الَّذِي)", "الجزء 16 (قَالَ أَلَمْ)", "الجزء 17 (اقْتَرَبَ)", "الجزء 18 (قَدْ أَفْلَحَ)", "الجزء 19 (وَقَالَ الَّذِينَ)", "الجزء 20 (أَمَّنْ خَلَقَ)", "الجزء 21 (اتْلُ مَا أُوحِيَ)", "الجزء 22 (وَمَنْ يَقْنُتْ)", "الجزء 23 (وَمَا لِيَ)", "الجزء 24 (فَمَنْ أَظْلَمُ)", "الجزء 25 (إِلَيْهِ يُرَدُّ)", "الجزء 26 (حم)", "الجزء 27 (قَالَ فَمَا خَطْبُكُمْ)", "الجزء 28 (قَدْ سَمِعَ اللَّهُ)", "الجزء 29 (تَبَارَكَ)", "الجزء 30 (عَمَّ)"];
+  const POS = ["من بداية الجزء", "من بداية الربع الأول", "من بداية الربع الثاني", "من بداية الربع الثالث", "من بداية النصف الثاني (الربع الرابع)", "من بداية الربع الخامس", "من بداية الربع السادس", "من بداية الربع السابع", "من بداية الحزب الثاني من الجزء", "من آية الأحكام الرئيسية في الجزء", "من قصص الأنبياء الواردة في الجزء", "من ختام السورة الواردة في الجزء", "من بداية الجزء", "من بداية الربع الأول", "من بداية الربع الثاني", "من بداية الربع الثالث", "من بداية النصف الثاني (الربع الرابع)", "من بداية الربع الخامس", "من بداية الربع السادس", "من بداية الربع السابع", "من بداية الحزب الثاني من الجزء", "من آية الأحكام الرئيسية في الجزء", "من قصص الأنبياء الواردة في الجزء", "من ختام السورة الواردة في الجزء", "من بداية الجزء", "من بداية الربع الأول", "من بداية الربع الثاني", "من بداية الربع الثالث", "من بداية النصف الثاني (الربع الرابع)", "من بداية الربع الخامس", "من بداية الربع السادس", "من بداية الربع السابع", "من بداية الحزب الثاني من الجزء", "من آية الأحكام الرئيسية في الجزء", "من قصص الأنبياء الواردة في الجزء", "من ختام السورة الواردة في الجزء", "من بداية الجزء", "من بداية الربع الأول", "من بداية الربع الثاني", "من بداية الربع الثالث"];
+  const NOTE = 'تسميع 1.5 صفحة / أو حسب تحديد المعلم';
+  const STATE_KEY = 'sawaed-exam-state';   // تبديل المواضع الحالي (مشترك بين الأجهزة)
+  const LOG_KEY = 'sawaed-exam-log';       // سجل الامتحانات
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const today = () => new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+
+  function toast(m, err){
+    const el = document.getElementById('saveStatus'); if(!el) return;
+    el.textContent = m; el.style.background = err ? 'var(--danger)' : 'var(--green)';
+    el.style.zIndex = 2000; el.style.display = 'block';
+    clearTimeout(toast.t); toast.t = setTimeout(()=>{ el.style.display='none'; }, err ? 5000 : 2400);
+  }
+
+  // strict=true: لو فشلت القراءة بسبب الشبكة (مش "ما في بيانات") نرمي خطأ بدل ما نرجّع null،
+  // عشان ما نكتب فوق الحالة المحفوظة بحالة جديدة بالغلط.
+  async function sget(k, strict){
+    try{ const r = await window.storage.get(k, false); return r && r.value ? JSON.parse(r.value) : null; }
+    catch(e){
+      if(strict && !/not found/i.test(String((e && e.message) || ''))) throw e;
+      return null;
+    }
+  }
+  async function sset(k, v){
+    for(let i=0;i<3;i++){
+      try{ if(await window.storage.set(k, JSON.stringify(v), false)) return true; }catch(e){ console.error(e); }
+      await sleep(500*(i+1));
+    }
+    return false;
+  }
+
+  // ---- حالة المواضع: perms[جزء][رقم الموضع-1] = رقم النص بالبنك ----
+  function normState(st){
+    if(!st || !st.perms) st = { perms:{}, burned:{} };
+    st.burned = st.burned || {};
+    for(let j=1;j<=30;j++){
+      if(!Array.isArray(st.perms[j]) || st.perms[j].length !== 40) st.perms[j] = shuffle([...Array(40).keys()]);
+    }
+    return st;
+  }
+  // قراءة أحدث نسخة ← تعديل ← حفظ (بالدور، عشان ما تتداخل الكتابات)
+  let chain = Promise.resolve();
+  function mutate(fn){
+    const run = async () => {
+      let cur;
+      try{ cur = await sget(STATE_KEY, true); }
+      catch(e){ console.error(e); toast('⚠️ تعذّر قراءة حالة المواضع، تأكدي من الإنترنت', true); throw e; }
+      const st = normState(cur);
+      fn(st);
+      if(!(await sset(STATE_KEY, st))){
+        toast('⚠️ تعذّر حفظ حالة المواضع، تأكدي من الإنترنت', true);
+        throw new Error('state save failed');
+      }
+      return st;
+    };
+    const p = chain.then(run); chain = p.catch(()=>{}); return p;
+  }
+  // تغيير كامل لمواضع الجزء، مع ضمان إن المواضع اللي انفتحت تصير نصها مختلف
+  function reshuffle(st, j, slots){
+    const old = st.perms[j], txt = old.map(i => POS[i]);
+    let p = shuffle(old);
+    for(let t=0; t<300 && !slots.every(s => POS[p[s-1]] !== txt[s-1]); t++) p = shuffle(old);
+    st.perms[j] = p; delete st.burned[j];
+  }
+
+  // ---- الواجهة ----
+  let S = null; // جلسة الامتحان الحالية
+  const card = document.createElement('div');
+  card.className = 'exam-card'; card.id = 'examCard';
+  card.innerHTML = `
+    <h3>📝 الامتحانات <span class="ex-note">(مستقلة عن الشعب)</span></h3>
+    <p class="ex-hint">اختاري الأجزاء، وبيطلع للطالب مواضع بأرقام يختار منها. بعد ما يخلص بتتغير كل مواضع هالأجزاء تلقائيًا، فاللي بعده ما بينفعه غش.</p>
+    <button class="btn btn-gold btn-block" id="startExamBtn">▶ بدء امتحان طالب</button>
+    <button class="btn btn-outline btn-block" style="margin-top:8px;" id="examLogBtn">📜 سجل الامتحانات</button>
+    <div id="examLogPanel" style="display:none"></div>`;
+  const anchor = document.querySelector('.markaz-title');
+  const root = document.getElementById('appRoot') || document.body;
+  if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(card, anchor);
+  else root.insertBefore(card, root.firstChild);
+
+  const modal = document.createElement('div');
+  modal.className = 'exam-modal'; modal.id = 'examModal';
+  modal.innerHTML = `<div class="exam-box"><div class="exam-head"><span>📝 امتحان</span><button class="ex-x" id="exClose">✕</button></div><div id="examBody"></div></div>`;
+  document.body.appendChild(modal);
+  const body = modal.querySelector('#examBody');
+
+  async function loadNames(){
+    const names = new Set();
+    const list = (await sget('sawaed-halaqat-list')) || [{id:'h1'},{id:'h2'}];
+    for(const h of list){
+      const c = await sget(h.id === 'h1' ? 'sawaed-config' : 'sawaed-config:' + h.id);
+      ((c && c.students) || []).forEach(s => { if((s.name||'').trim()) names.add(s.name.trim()); });
+    }
+    return [...names];
+  }
+
+  async function openExam(){
+    S = null; modal.style.display = 'flex';
+    body.innerHTML = '<p class="ex-hint">جارِ التحضير...</p>';
+    // لو في امتحان انقطع قبل ما ينتهي (انسكّر المتصفح): نغيّر مواضع أجزائه أول
+    try{
+      await mutate(st => { Object.keys(st.burned).forEach(j => { if((st.burned[j]||[]).length) reshuffle(st, j, st.burned[j]); }); });
+    }catch(e){ modal.style.display = 'none'; return; }
+    const names = await loadNames();
+    body.innerHTML = `
+      <label class="ex-lbl">اسم الطالب</label>
+      <input id="exName" list="exNames" class="ex-input" placeholder="اكتبي أو اختاري اسم الطالب" autocomplete="off">
+      <datalist id="exNames">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      <div class="ex-row"><b>اختاري الأجزاء <span id="exCount" class="ex-note">(0)</span></b>
+        <button class="ex-mini" id="exAll">الكل</button><button class="ex-mini" id="exNone">مسح</button></div>
+      <div class="ex-juz-grid">${JUZ.map((n,i) => `<label class="ex-juz"><input type="checkbox" value="${i+1}"><span>${esc(n)}</span></label>`).join('')}</div>
+      <button class="btn btn-gold btn-block" id="exGo">▶ ابدأ الامتحان</button>`;
+  }
+
+  function picked(j, s){ return (S.picks[j] || []).some(p => p.slot === s); }
+
+  function renderPick(){
+    body.innerHTML = `<div class="ex-who">👤 ${esc(S.name)}</div>` + S.juz.map(j => `
+      <div class="ex-sec">
+        <div class="ex-sec-h"><b>${esc(JUZ[j-1])}</b><button class="ex-mini" data-rand="${j}">🎲 موضع عشوائي</button></div>
+        <div class="ex-slots">${[...Array(40)].map((_,i) => `<button class="ex-slot" data-j="${j}" data-s="${i+1}">${i+1}</button>`).join('')}</div>
+        <div class="ex-res" id="exRes${j}"></div>
+      </div>`).join('') + `<button class="btn btn-green btn-block" id="exFinish">✅ انتهى الامتحان (غيّري المواضع)</button>`;
+  }
+
+  function paintRes(j){
+    const res = body.querySelector('#exRes' + j); if(!res) return;
+    res.innerHTML = (S.picks[j] || []).map(p => `<div class="ex-pick"><span class="ex-n">${p.slot}</span><span>${esc(JUZ[j-1].replace(/\s*\(.*\)/,''))} — ${esc(p.text)} <span class="ex-note">(${NOTE})</span></span></div>`).join('');
+    (S.picks[j] || []).forEach(p => { const b = body.querySelector(`.ex-slot[data-j="${j}"][data-s="${p.slot}"]`); if(b) b.classList.add('on'); });
+  }
+
+  async function reveal(j, s){
+    if(!S || S.busy || picked(j, s)) return;
+    S.busy = true;
+    const btn = body.querySelector(`.ex-slot[data-j="${j}"][data-s="${s}"]`); if(btn) btn.classList.add('wait');
+    try{
+      // نقرأ النص من النسخة الأحدث بالسحابة، ونعلّم الموضع "محروق" فورًا
+      const st = await mutate(st => { const b = st.burned[j] = st.burned[j] || []; if(!b.includes(s)) b.push(s); });
+      (S.picks[j] = S.picks[j] || []).push({ slot: s, text: POS[st.perms[j][s-1]] });
+      paintRes(j);
+    }catch(e){ console.error(e); toast('⚠️ تعذّر فتح الموضع، جرّبي مرة ثانية', true); }
+    if(btn) btn.classList.remove('wait');
+    S.busy = false;
+  }
+
+  function randomPick(j){
+    const free = [...Array(40).keys()].map(i => i+1).filter(s => !picked(j, s));
+    if(!free.length){ toast('كل مواضع هالجزء انفتحت', true); return; }
+    reveal(j, free[Math.floor(Math.random()*free.length)]);
+  }
+
+  async function finish(){
+    if(!S || S.finishing) return;
+    while(S.busy) await sleep(100);
+    S.finishing = true;
+    const touched = S.juz.filter(j => (S.picks[j] || []).length);
+    if(touched.length){
+      try{
+        await mutate(st => touched.forEach(j => reshuffle(st, j, S.picks[j].map(p => p.slot))));
+      }catch(e){
+        // ما نسكّر النافذة، عشان تقدري تعيدي المحاولة بدون ما تضيع المواضع
+        S.finishing = false;
+        toast('⚠️ تعذّر تغيير المواضع، اضغطي "انتهى الامتحان" مرة ثانية', true);
+        return;
+      }
+      try{
+        const log = (await sget(LOG_KEY, true)) || [];
+        log.unshift({ student: S.name, date: today(), ts: Date.now(),
+          juz: touched.map(j => ({ j, name: JUZ[j-1], picks: S.picks[j] })) });
+        await sset(LOG_KEY, log.slice(0, 150));
+      }catch(e){ console.error(e); toast('⚠️ تغيّرت المواضع بس تعذّر حفظ السجل', true); S = null; modal.style.display = 'none'; return; }
+      toast('✅ انتهى الامتحان وتغيّرت مواضع ' + touched.length + ' جزء');
+    }
+    S = null; modal.style.display = 'none';
+    const lp = document.getElementById('examLogPanel');
+    if(lp && lp.style.display !== 'none') renderLog();
+  }
+
+  function closeExam(){
+    if(S && Object.values(S.picks).some(a => a.length)){
+      if(!confirm('الطالب شاف مواضع، رح نعتبر الامتحان منتهي وتتغير مواضع أجزائه. متأكدة؟')) return;
+      finish();
+    } else { S = null; modal.style.display = 'none'; }
+  }
+
+  async function renderLog(){
+    const p = document.getElementById('examLogPanel');
+    p.innerHTML = '<p class="ex-hint">جارِ التحميل...</p>';
+    const log = (await sget(LOG_KEY)) || [];
+    p.innerHTML = log.length ? log.slice(0, 20).map(l => `
+      <div class="ex-log"><div class="ex-log-h"><b>${esc(l.student)}</b><span>${esc(l.date)}</span></div>
+      ${l.juz.map(x => `<div class="ex-log-l">${esc(x.name)}: ${x.picks.map(q => `موضع ${q.slot} (${esc(q.text)})`).join('، ')}</div>`).join('')}</div>`).join('')
+      : '<p class="ex-hint" style="margin-top:8px;">ما في امتحانات لسا.</p>';
+  }
+
+  // ---- ربط الأزرار ----
+  document.getElementById('startExamBtn').addEventListener('click', openExam);
+  document.getElementById('examLogBtn').addEventListener('click', () => {
+    const p = document.getElementById('examLogPanel');
+    if(p.style.display === 'none'){ p.style.display = 'block'; renderLog(); } else p.style.display = 'none';
+  });
+  modal.querySelector('#exClose').addEventListener('click', closeExam);
+  body.addEventListener('change', e => {
+    if(e.target.matches('.ex-juz input')) body.querySelector('#exCount').textContent = '(' + body.querySelectorAll('.ex-juz input:checked').length + ')';
+  });
+  body.addEventListener('click', e => {
+    const t = e.target;
+    if(t.closest('.ex-slot')){ const b = t.closest('.ex-slot'); return reveal(+b.dataset.j, +b.dataset.s); }
+    if(t.closest('[data-rand]')) return randomPick(+t.closest('[data-rand]').dataset.rand);
+    if(t.id === 'exFinish') return finish();
+    if(t.id === 'exAll' || t.id === 'exNone'){
+      body.querySelectorAll('.ex-juz input').forEach(c => { c.checked = t.id === 'exAll'; });
+      body.querySelector('#exCount').textContent = '(' + (t.id === 'exAll' ? 30 : 0) + ')';
+      return;
+    }
+    if(t.id === 'exGo'){
+      const name = body.querySelector('#exName').value.trim();
+      const juz = [...body.querySelectorAll('.ex-juz input:checked')].map(c => +c.value);
+      if(!name){ alert('اكتبي اسم الطالب أول.'); return; }
+      if(!juz.length){ alert('اختاري جزء واحد على الأقل.'); return; }
+      S = { name, juz, picks: {}, busy: false, finishing: false };
+      renderPick();
+    }
+  });
+})();
+</script>
+<!-- ===================== نهاية قسم الامتحانات ===================== -->
+
 </body>
 </html>
