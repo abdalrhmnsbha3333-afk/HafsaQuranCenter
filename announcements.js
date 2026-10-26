@@ -251,8 +251,8 @@ if(location.hash==='#display'){
   document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')go(1);if(e.key==='ArrowRight')go(-1);if(e.key===' '){e.preventDefault();$('cPause').click()}});
   let ht;const wake=()=>{$('anCtl').classList.remove('hide');clearTimeout(ht);ht=setTimeout(()=>$('anCtl').classList.add('hide'),4000)};
   document.addEventListener('mousemove',wake);document.addEventListener('touchstart',wake);wake();
-  window.addEventListener('load',()=>{refresh();setInterval(refresh,120000)});
-  if(document.readyState==='complete'){refresh();setInterval(refresh,120000)}
+  window.addEventListener('load',()=>{refresh();setInterval(refresh,6000)});
+  if(document.readyState==='complete'){refresh();setInterval(refresh,6000)}
   return;
 }
 
