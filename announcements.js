@@ -21,50 +21,61 @@
 .an-stu{display:flex;align-items:center;gap:8px;margin:6px 0;background:#fff;padding:6px;border-radius:10px}
 .an-stu img,.an-stu .ph{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--sand-deep);display:flex;align-items:center;justify-content:center;font-weight:900}
 
-/* ==================== تنسيقات شاشة العرض التكيُّفية الذكية ==================== */
-.an-s{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2.5cqw 4cqw 4.5cqw;text-align:center;color:#fbf7ec;background:#15231b;opacity:0;transition:opacity .8s ease;container-type:inline-size;direction:rtl;font-family:Tajawal,sans-serif;overflow:hidden}
-.an-s.on{opacity:1}
+/* ==================== تنسيقات شاشة العرض التكيُّفية الكاملة (Override) ==================== */
+#anDisp, #anDisp .an-stage, #anDisp .an-stage-inner {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #000 !important;
+}
 
-/* نمط الإعلانات المصورة (Dynamic Hero Layout) */
-.an-s.an-ad-slide{padding:0;justify-content:center}
-.an-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(0.5);transform:scale(1.15);z-index:1}
-.an-ad-hero{position:relative;z-index:2;height:100%;width:100%;display:flex;align-items:center;justify-content:center}
-.an-img-hero{max-height:94%;max-width:96%;object-fit:contain;border-radius:1.5cqw;box-shadow:0 1.5cqw 4cqw rgba(0,0,0,0.65);border:0.15cqw solid rgba(255,255,255,0.18)}
+.an-s{position:absolute !important;inset:0 !important;width:100vw !important;height:100vh !important;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2.5cqw 4cqw 4.5cqw;text-align:center;color:#fbf7ec;background:#15231b;opacity:0;transition:opacity .8s ease;container-type:inline-size;direction:rtl;font-family:Tajawal,sans-serif;overflow:hidden;box-sizing:border-box}
+.an-s.on{opacity:1 !important}
 
-/* شارة الإعلان ونوع القسم المدمجة */
-.an-badge-top{position:absolute;top:2.5cqw;right:3cqw;z-index:5;background:rgba(20,32,25,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.15cqw solid rgba(212,175,55,0.4);color:#f5e5c9;padding:0.5cqw 2cqw;border-radius:3cqw;font-size:2cqw;font-weight:800;box-shadow:0 0.5cqw 1.5cqw rgba(0,0,0,0.4)}
-.an-title-overlay{position:absolute;top:2.2cqw;left:50%;transform:translateX(-50%);z-index:5;background:rgba(15,25,19,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:0.1cqw solid rgba(255,255,255,0.15);padding:0.4cqw 3cqw;border-radius:2cqw;font:700 3.2cqw Amiri,serif;color:#fdf8ec;text-shadow:0 0.2cqw 0.8cqw rgba(0,0,0,0.8);white-space:nowrap;max-width:60%;overflow:hidden;text-overflow:ellipsis}
+/* نمط الإعلانات المصورة (Hero Blur Layout) */
+.an-s.an-ad-slide{padding:0 !important;justify-content:center !important}
+.an-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(40px) brightness(0.5);transform:scale(1.2);z-index:1}
+.an-ad-hero{position:relative;z-index:2;height:100% !important;width:100% !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:1.5vh 1.5vw;box-sizing:border-box}
+.an-img-hero{max-height:94vh !important;max-width:96vw !important;width:auto !important;height:auto !important;object-fit:contain !important;border-radius:1.2cqw;box-shadow:0 1.5cqw 4cqw rgba(0,0,0,0.7);border:0.15cqw solid rgba(255,255,255,0.18)}
 
-/* نمط لوحات الشرف والنجوم (Honor & Recognition Board Layout) */
-.an-s.an-honor-slide{background:radial-gradient(circle at 50% 30%,rgba(43,72,55,0.8),transparent 70%),linear-gradient(145deg,#0e1812,#1c2f24)}
+/* شارة الإعلان والعنوان المدمجان */
+.an-badge-top{position:absolute;top:2.5cqw;right:3cqw;z-index:5;background:rgba(15,25,20,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.15cqw solid rgba(212,175,55,0.4);color:#f5e5c9;padding:0.5cqw 2cqw;border-radius:3cqw;font-size:2cqw;font-weight:800;box-shadow:0 0.5cqw 1.5cqw rgba(0,0,0,0.5)}
+.an-title-overlay{position:absolute;top:2.2cqw;left:50%;transform:translateX(-50%);z-index:5;background:rgba(15,25,19,0.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:0.1cqw solid rgba(255,255,255,0.18);padding:0.4cqw 3cqw;border-radius:2cqw;font:700 3cqw Amiri,serif;color:#fdf8ec;text-shadow:0 0.2cqw 0.8cqw rgba(0,0,0,0.8);white-space:nowrap;max-width:60%;overflow:hidden;text-overflow:ellipsis}
+
+/* نمط لوحات الشرف والنجوم (Honor Boards) */
+.an-s.an-honor-slide{background:radial-gradient(circle at 50% 30%,rgba(43,72,55,0.85),transparent 70%),linear-gradient(145deg,#0b140f,#18291f)}
 .an-honor-header{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0.3cqw;margin-top:0.5cqw}
-.an-honor-header::before{content:"✦ ❖ ✦";font-size:2.2cqw;color:#d4af37;opacity:0.8;letter-spacing:0.8cqw}
+.an-honor-header::before{content:"✦ ❖ ✦";font-size:2.2cqw;color:#d4af37;opacity:0.85;letter-spacing:0.8cqw}
 .an-t{font:900 4.8cqw Amiri,serif;color:#f3e4c8;text-shadow:0 0.3cqw 1cqw rgba(0,0,0,0.7)}
 .an-d{font-size:2.2cqw;color:#d0ded5;max-width:85%;line-height:1.5;font-weight:500}
 
-/* شبكة كروت الطلاب (Grid & Cards) */
+/* شبكة كروت الطلاب (Grid & Podium Cards) */
 .an-grid{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:2.2cqw;justify-content:center;align-items:center;width:100%;margin:auto 0}
-.an-e{position:relative;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.18cqw solid rgba(212,175,55,0.3);border-radius:2cqw;padding:1.8cqw 1.2cqw;width:21cqw;display:flex;flex-direction:column;align-items:center;gap:0.7cqw;box-shadow:0 1cqw 2.5cqw rgba(0,0,0,0.35);transition:transform 0.3s ease}
-.an-e.first{background:linear-gradient(160deg,rgba(184,135,59,0.38),rgba(35,52,42,0.6));border-color:#e8ca7b;transform:scale(1.08);box-shadow:0 1.2cqw 3cqw rgba(212,175,55,0.25)}
+.an-e{position:relative;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.18cqw solid rgba(212,175,55,0.3);border-radius:2cqw;padding:1.8cqw 1.2cqw;width:21cqw;display:flex;flex-direction:column;align-items:center;gap:0.7cqw;box-shadow:0 1cqw 2.5cqw rgba(0,0,0,0.4);transition:transform 0.3s ease}
+.an-e.first{background:linear-gradient(160deg,rgba(184,135,59,0.42),rgba(35,52,42,0.65));border-color:#e8ca7b;transform:scale(1.08);box-shadow:0 1.2cqw 3cqw rgba(212,175,55,0.3)}
 .an-e.big{width:36cqw;padding:2.5cqw 2cqw}.an-e.big .ph,.an-e.big img{width:18cqw;height:18cqw}
 
-/* الصورة الرمزية للطلاب والشعار بديل الحرف */
+/* الصورة الرمزية وشعار النجمة */
 .an-e img,.an-e .ph{width:11cqw;height:11cqw;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#2b3d32,#18261e);color:#e8ca7b;display:flex;align-items:center;justify-content:center;border:0.35cqw solid #d4af37;box-shadow:0 0.6cqw 1.8cqw rgba(0,0,0,0.5)}
 .an-e .ph-icon{width:55%;height:55%;fill:currentColor;opacity:0.9}
 
 .an-n{font-weight:800;font-size:2.4cqw;color:#ffffff;text-shadow:0 0.2cqw 0.5cqw rgba(0,0,0,0.8)}.an-e.big .an-n{font-size:3.6cqw}
-.an-h{font-size:1.7cqw;color:#b2c7bb;background:rgba(0,0,0,0.25);padding:0.2cqw 1.2cqw;border-radius:1cqw}
-.an-p{color:#f0cf75;font-weight:800;font-size:2cqw;background:rgba(212,175,55,0.12);padding:0.3cqw 1.4cqw;border-radius:2cqw;border:0.1cqw solid rgba(212,175,55,0.3)}
+.an-h{font-size:1.7cqw;color:#b2c7bb;background:rgba(0,0,0,0.3);padding:0.2cqw 1.2cqw;border-radius:1cqw}
+.an-p{color:#f0cf75;font-weight:800;font-size:2cqw;background:rgba(212,175,55,0.15);padding:0.3cqw 1.4cqw;border-radius:2cqw;border:0.1cqw solid rgba(212,175,55,0.35)}
 .an-r{position:absolute;top:-1cqw;right:-0.5cqw;background:linear-gradient(135deg,#d4af37,#aa8222);color:#121e17;border-radius:50%;width:3.8cqw;height:3.8cqw;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2.2cqw;box-shadow:0 0.4cqw 1cqw rgba(0,0,0,0.4);border:0.15cqw solid #fff}
 .an-empty{color:#cbdcd1;font-size:3.2cqw;font-weight:700}
 
-/* عناصر شاشة العرض الخارجية والتحكم المصغّر */
+/* شريط التحكم المصغر في الأسفل */
 body.an-disp{background:#000;overflow:hidden}
 body.an-disp #lockScreen,body.an-disp #appRoot,body.an-disp .exam-modal,body.an-disp #saveStatus{display:none!important}
-#anDisp{position:fixed;inset:0;background:#000;z-index:5000}#anDisp .an-stage{position:absolute;inset:0}
-#anCtl{position:fixed;bottom:1.5vh;left:50%;transform:translateX(-50%);z-index:5001;display:flex;gap:8px;background:rgba(12,20,15,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:6px 14px;border-radius:30px;border:1px solid rgba(255,255,255,0.12);box-shadow:0 8px 24px rgba(0,0,0,0.5);transition:opacity 0.5s}
-#anCtl button{border:none;background:rgba(255,255,255,0.1);color:#f5e5c9;border-radius:20px;padding:6px 14px;font:700 13px Tajawal;cursor:pointer;transition:background 0.2s}
-#anCtl button:hover{background:rgba(212,175,55,0.3);color:#fff}
+#anDisp{position:fixed;inset:0;background:#000;z-index:5000}
+#anCtl{position:fixed;bottom:1.5vh;left:50%;transform:translateX(-50%);z-index:5001;display:flex;gap:8px;background:rgba(12,20,15,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:6px 14px;border-radius:30px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity 0.5s}
+#anCtl button{border:none;background:rgba(255,255,255,0.12);color:#f5e5c9;border-radius:20px;padding:6px 14px;font:700 13px Tajawal;cursor:pointer;transition:background 0.2s}
+#anCtl button:hover{background:rgba(212,175,55,0.35);color:#fff}
 #anCtl.hide{opacity:0;pointer-events:none}#anWarn{position:fixed;top:8px;right:8px;z-index:5001;color:#f6c;font-size:12px}
 `;document.head.appendChild(st)})();
 
@@ -110,7 +121,7 @@ function rank(stu){
 }
 const isActive=i=>i.status==='active'&&(!i.start||today()>=i.start)&&(!i.end||today()<=i.end);
 
-// أيقونة افتراضية فخمة بديلة للأحرف لعدم اقتطاع الصورة بصرياً
+// أيقونة النجمة الذهبية الافتراضية
 const STAR_ICON=`<svg class="ph-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
 
 function entry(e,o){
@@ -283,8 +294,10 @@ function validate(it){
   if(!it.title&&!isHonor(it.type))return'العنوان مطلوب';
   if(it.start&&it.end&&it.end<it.start)return'تاريخ النهاية قبل البداية';
   if(it.status==='active'&&isHonor(it.type)&&!it.halaqat.length)return'لا يمكن تفعيل لوحة شرف بدون تحديد شعبة';return''}
-async function preview(it){const s=await slidesFor(it,hal),p=B.querySelector('#fPrev')||B.querySelector('.an-prev');
-  p.innerHTML=s.length?s[0].html:emptyHtml}
+async function preview(it){
+  const s=await slidesFor(it,hal),p=B.querySelector('#fPrev')||B.querySelector('.an-prev');
+  p.innerHTML=s.length?`<div style="position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px;">${s[0].html}</div>`:emptyHtml;
+}
 async function photos(){
   hal=await getHal();B.innerHTML='<p class="ex-hint">جارِ التحميل...</p>';let h='<p class="ex-hint">الصور تُحفظ مصغّرة (حتى 300px) بمفتاح منفصل وتُستخدم تلقائياً بكل اللوحات.</p>';
   for(const x of hal){h+=`<h4>${esc(x.name)}</h4>`;for(const s of await getStu(x.id)){const p=await getPhoto(x.id,s.id);
