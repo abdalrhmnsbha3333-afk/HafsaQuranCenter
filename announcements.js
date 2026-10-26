@@ -54,10 +54,28 @@ async function sget(k){try{const r=await window.storage.get(k,false);return r&&r
 async function sset(k,v){for(let i=0;i<3;i++){try{if(await window.storage.set(k,JSON.stringify(v),false))return true}catch(e){}await sleep(500*(i+1))}return false}
 async function getHal(){const l=await sget(HL);return Array.isArray(l)&&l.length?l:[{id:'h1',name:'سواعد الحفاظ'},{id:'h2',name:'زاد الحفاظ'}]}
 async function getStu(hid){const c=await sget(hid==='h1'?'sawaed-config':'sawaed-config:'+hid);return((c&&c.students)||[]).filter(s=>(s.name||'').trim())}
+const IDX='sawaed-ann-index';
 async function getItems(){
-  const r=await window.storage.list(A,false);const out=[];
-  for(const k of (r.keys||[])){const v=await sget(k);if(v)out.push(v)}
+  // فهرس بمعرّفات الإعلانات بدل list() اللي بيجلب المجموعة كاملة (يستهلك قراءات Firestore)
+  let ids=await sget(IDX);
+  if(!Array.isArray(ids)){
+    const r=await window.storage.list(A,false);
+    ids=(r.keys||[]).map(k=>k.slice(A.length));
+    if(ids.length)await sset(IDX,ids);
+  }
+  const out=[];
+  for(const id of ids){const v=await sget(A+id);if(v)out.push(v)}
   return out.sort((a,b)=>(a.order||0)-(b.order||0));
+}
+async function saveItem(it){
+  if(!await sset(A+it.id,it))return false;
+  const ids=(await sget(IDX))||[];
+  if(!ids.includes(it.id)){ids.push(it.id);await sset(IDX,ids)}
+  return true;
+}
+async function delItem(id){
+  await window.storage.delete(A+id,false);
+  const ids=((await sget(IDX))||[]).filter(x=>x!==id);await sset(IDX,ids);
 }
 const photoCache={};
 async function getPhoto(hid,sid){const k=P+hid+':'+sid;if(!(k in photoCache)){const v=await sget(k);photoCache[k]=v&&v.d||null}return photoCache[k]}
@@ -142,8 +160,8 @@ if(location.hash==='#display'){
   document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')go(1);if(e.key==='ArrowRight')go(-1);if(e.key===' '){e.preventDefault();$('cPause').click()}});
   let ht;const wake=()=>{$('anCtl').classList.remove('hide');clearTimeout(ht);ht=setTimeout(()=>$('anCtl').classList.add('hide'),4000)};
   document.addEventListener('mousemove',wake);document.addEventListener('touchstart',wake);wake();
-  window.addEventListener('load',()=>{refresh();setInterval(refresh,30000)});
-  if(document.readyState==='complete'){refresh();setInterval(refresh,30000)}
+  window.addEventListener('load',()=>{refresh();setInterval(refresh,120000)});
+  if(document.readyState==='complete'){refresh();setInterval(refresh,120000)}
   return;
 }
 
@@ -221,12 +239,12 @@ B.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)
   const items=id?await getItems():[],it=items.find(x=>x.id===id);
   if(a==='new')return form();if(a==='back')return view();if(a==='edit')return form(it);
   if(a==='fprev')return preview(collect());
-  if(a==='fsave'){const x=collect(),er=validate(x);if(er)return alert(er);if(await sset(A+x.id,x)){view()}else alert('⚠ تعذّر الحفظ، تأكدي من الإنترنت');return}
+  if(a==='fsave'){const x=collect(),er=validate(x);if(er)return alert(er);if(await saveItem(x)){view()}else alert('⚠ تعذّر الحفظ، تأكدي من الإنترنت');return}
   if(a==='prev'){hal=await getHal();B.innerHTML='<div class="an-prev"></div><button class="btn btn-outline btn-block" data-a="back">رجوع</button>';return preview(it)}
-  if(a==='copy'){const c={...it,id:'a'+Date.now().toString(36),title:it.title+' (نسخة)',status:'draft'};await sset(A+c.id,c);return view()}
-  if(a==='tog'){const er=it.status==='active'?'':validate({...it,status:'active'});if(er)return alert(er);it.status=it.status==='active'?'inactive':'active';await sset(A+it.id,it);return view()}
-  if(a==='up'||a==='down'){const i=items.findIndex(x=>x.id===id),j=i+(a==='up'?-1:1);if(j<0||j>=items.length)return;items.forEach((x,k)=>x.order=k+1);[items[i].order,items[j].order]=[items[j].order,items[i].order];for(const x of items)await sset(A+x.id,x);return view()}
-  if(a==='del'){if(confirm('حذف هذا العنصر نهائياً؟')){await window.storage.delete(A+id,false);view()}return}
+  if(a==='copy'){const c={...it,id:'a'+Date.now().toString(36),title:it.title+' (نسخة)',status:'draft'};await saveItem(c);return view()}
+  if(a==='tog'){const er=it.status==='active'?'':validate({...it,status:'active'});if(er)return alert(er);it.status=it.status==='active'?'inactive':'active';await saveItem(it);return view()}
+  if(a==='up'||a==='down'){const i=items.findIndex(x=>x.id===id),j=i+(a==='up'?-1:1);if(j<0||j>=items.length)return;items.forEach((x,k)=>x.order=k+1);[items[i].order,items[j].order]=[items[j].order,items[i].order];for(const x of items)await saveItem(x);return view()}
+  if(a==='del'){if(confirm('حذف هذا العنصر نهائياً؟')){await delItem(id);view()}return}
   if(a==='delph'){const k=P+b.dataset.h+':'+b.dataset.s;await window.storage.delete(k,false);delete photoCache[k];photos()}});
 m.querySelector('#anTabs').addEventListener('click',e=>{const t=e.target.dataset.t;if(t){tab=t;view()}});
 m.querySelector('#anX').onclick=()=>m.style.display='none';
