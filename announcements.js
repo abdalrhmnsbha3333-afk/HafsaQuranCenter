@@ -27,9 +27,9 @@
 
 /* نمط الإعلانات المصورة (Dynamic Hero Layout) */
 .an-s.an-ad-slide{padding:0;justify-content:center}
-.an-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(35px) brightness(0.55);transform:scale(1.15);z-index:1}
+.an-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(0.5);transform:scale(1.15);z-index:1}
 .an-ad-hero{position:relative;z-index:2;height:100%;width:100%;display:flex;align-items:center;justify-content:center}
-.an-img-hero{max-height:92%;max-width:94%;object-fit:contain;border-radius:1.5cqw;box-shadow:0 1.5cqw 4cqw rgba(0,0,0,0.65);border:0.15cqw solid rgba(255,255,255,0.18)}
+.an-img-hero{max-height:94%;max-width:96%;object-fit:contain;border-radius:1.5cqw;box-shadow:0 1.5cqw 4cqw rgba(0,0,0,0.65);border:0.15cqw solid rgba(255,255,255,0.18)}
 
 /* شارة الإعلان ونوع القسم المدمجة */
 .an-badge-top{position:absolute;top:2.5cqw;right:3cqw;z-index:5;background:rgba(20,32,25,0.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.15cqw solid rgba(212,175,55,0.4);color:#f5e5c9;padding:0.5cqw 2cqw;border-radius:3cqw;font-size:2cqw;font-weight:800;box-shadow:0 0.5cqw 1.5cqw rgba(0,0,0,0.4)}
@@ -44,7 +44,7 @@
 
 /* شبكة كروت الطلاب (Grid & Cards) */
 .an-grid{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:2.2cqw;justify-content:center;align-items:center;width:100%;margin:auto 0}
-.an-e{background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.18cqw solid rgba(212,175,55,0.3);border-radius:2cqw;padding:1.8cqw 1.2cqw;width:21cqw;display:flex;flex-direction:column;align-items:center;gap:0.7cqw;box-shadow:0 1cqw 2.5cqw rgba(0,0,0,0.35);transition:transform 0.3s ease}
+.an-e{position:relative;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:0.18cqw solid rgba(212,175,55,0.3);border-radius:2cqw;padding:1.8cqw 1.2cqw;width:21cqw;display:flex;flex-direction:column;align-items:center;gap:0.7cqw;box-shadow:0 1cqw 2.5cqw rgba(0,0,0,0.35);transition:transform 0.3s ease}
 .an-e.first{background:linear-gradient(160deg,rgba(184,135,59,0.38),rgba(35,52,42,0.6));border-color:#e8ca7b;transform:scale(1.08);box-shadow:0 1.2cqw 3cqw rgba(212,175,55,0.25)}
 .an-e.big{width:36cqw;padding:2.5cqw 2cqw}.an-e.big .ph,.an-e.big img{width:18cqw;height:18cqw}
 
@@ -110,7 +110,7 @@ function rank(stu){
 }
 const isActive=i=>i.status==='active'&&(!i.start||today()>=i.start)&&(!i.end||today()<=i.end);
 
-// أيقونة افتراضية فخمة بديلة للأحرف للأصغر حسناً وبصرياً
+// أيقونة افتراضية فخمة بديلة للأحرف لعدم اقتطاع الصورة بصرياً
 const STAR_ICON=`<svg class="ph-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
 
 function entry(e,o){
