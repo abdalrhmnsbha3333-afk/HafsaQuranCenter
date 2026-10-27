@@ -2263,55 +2263,75 @@ init();
     }
   }
 </script>
-<script>
-  // التحكم في عرض اللوحات وتصفية البيانات بناءً على الجلسة الحالية
-  auth.onAuthStateChanged(async (user) => {
-    const loginModal = document.getElementById('loginModal');
-    const adminPanel = document.getElementById('adminPanel');
+<script type="module">
+  import { doc, getDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-    if (!user) {
-      // إذا لم يكن مسجلاً، إظهار نافذة الدخول وإخفاء لوحة المشرف
-      if (loginModal) loginModal.style.display = 'flex';
-      if (adminPanel) adminPanel.style.display = 'none';
-      return;
-    }
+  // الانتظار لحين اكتمال تجهيز الفايربيس
+  window.addEventListener('firebase-ready', () => {
+    const auth = window.auth;
+    const db = window.db;
 
-    // إخفاء نافذة تسجيل الدخول عند النجاح
-    if (loginModal) loginModal.style.display = 'none';
+    if (!auth || !db) return;
 
-    // جلب بيانات الحساب
-    const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-    if (!userDoc.exists) return;
+    auth.onAuthStateChanged(async (user) => {
+      const loginModal = document.getElementById('loginModal');
+      const adminPanel = document.getElementById('adminPanel');
 
-    const userData = userDoc.data();
-    window.currentUserData = userData;
+      if (!user) {
+        // إذا لم يكن مسجلاً، إظهار نافذة الدخول وإخفاء لوحة المشرف
+        if (loginModal) loginModal.style.display = 'flex';
+        if (adminPanel) adminPanel.style.display = 'none';
+        return;
+      }
 
-    if (userData.role === 'admin') {
-      // حساب مشرف رئيسي: إظهار لوحة المشرف وتنسيق البيانات
-      if (adminPanel) adminPanel.style.display = 'block';
-      loadAllSections(); // تحميل قائمة الشعب
-    } else {
-      // حساب شعبة (معلم): إخفاء لوحة المشرف
-      if (adminPanel) adminPanel.style.display = 'none';
-    }
+      // إخفاء نافذة تسجيل الدخول عند النجاح
+      if (loginModal) loginModal.style.display = 'none';
 
-    // إعادة تحميل بيانات الطلاب المفلترة بحسب sectionId
-    if (typeof loadStudents === 'function') {
-      loadStudents();
-    }
+      try {
+        // جلب بيانات الحساب باستخدام v12
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) return;
+
+        const userData = userDoc.data();
+        window.currentUserData = userData;
+
+        if (userData.role === 'admin') {
+          // حساب مشرف رئيسي: إظهار لوحة المشرف وتحميل الشعب
+          if (adminPanel) adminPanel.style.display = 'block';
+          if (typeof window.loadAllSections === 'function') {
+            window.loadAllSections();
+          }
+        } else {
+          // حساب شعبة (معلم): إخفاء لوحة المشرف
+          if (adminPanel) adminPanel.style.display = 'none';
+        }
+
+        // إعادة تحميل بيانات الطلاب المفلترة بحسب sectionId
+        if (typeof window.loadStudents === 'function') {
+          window.loadStudents();
+        }
+      } catch (err) {
+        console.error("خطأ أثناء التحقق من بيانات المستخدم:", err);
+      }
+    });
   });
 
   // دالة مساعدة لتصفية استعلامات الطلاب بناءً على حساب الشعبة
-  function getFilteredStudentsQuery() {
+  window.getFilteredStudentsQuery = function() {
     const user = window.currentUserData;
-    let query = firebase.firestore().collection('students');
-    
+    const db = window.db;
+    if (!db) return null;
+
+    let queryRef = collection(db, 'students');
+
     // إذا كان الحساب معلم، نحدد النطاق بشعبته فقط
     if (user && user.role === 'teacher' && user.sectionId) {
-      query = query.where('sectionId', '==', user.sectionId);
+      queryRef = query(queryRef, where('sectionId', '==', user.sectionId));
     }
-    return query;
-  }
+    return queryRef;
+  };
 </script>
 <!-- تهيئة Firebase v12 بالشكل الصحيح وتمرير المتغيرات -->
 <script type="module">
