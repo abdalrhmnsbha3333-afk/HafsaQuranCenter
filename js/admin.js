@@ -7,6 +7,7 @@ import {
   addDoc, 
   doc, 
   setDoc, 
+  getDoc,
   getDocs, 
   updateDoc, 
   serverTimestamp 
@@ -53,7 +54,8 @@ window.createNewSection = async function(sectionName, username, initialPassword)
     await setDoc(doc(db, 'users', newUid), {
       role: 'teacher',
       sectionId: sectionRef.id,
-      username: username
+      username: username,
+      email: email
     });
 
     alert(`تم إنشاء شعبة (${sectionName}) والحساب بنجاح!`);
@@ -64,7 +66,7 @@ window.createNewSection = async function(sectionName, username, initialPassword)
   }
 };
 
-// جلب وعرض جميع الشعب
+// جلب وعرض جميع الشعب في لوحة المشرف
 window.loadAllSections = async function() {
   if (!window.currentUserData || window.currentUserData.role !== 'admin') return;
 
@@ -81,7 +83,7 @@ window.loadAllSections = async function() {
       const data = docSnap.data();
       const sectionId = docSnap.id;
       const item = document.createElement('div');
-      item.style.cssText = "padding:10px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items:center;";
+      item.style.cssText = "padding:10px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;";
       item.innerHTML = `
         <div>
           <strong>${data.name || ''}</strong> (${data.username || ''})
@@ -89,8 +91,11 @@ window.loadAllSections = async function() {
             [${data.isActive ? 'مفعل' : 'معطل'}]
           </span>
         </div>
-        <div>
-          <button onclick="toggleSectionStatus('${sectionId}', ${!data.isActive})" style="padding:5px 10px; cursor:pointer;">
+        <div style="display:flex; gap:6px;">
+          <button onclick="openEditSectionModal('${sectionId}')" style="padding:5px 10px; cursor:pointer; background:#17a2b8; color:#fff; border:none; border-radius:4px;">
+            ⚙️ تعديل الحساب
+          </button>
+          <button onclick="toggleSectionStatus('${sectionId}', ${!data.isActive})" style="padding:5px 10px; cursor:pointer; background:${data.isActive ? '#dc3545' : '#28a745'}; color:#fff; border:none; border-radius:4px;">
             ${data.isActive ? 'تعطيل' : 'تفعيل'}
           </button>
         </div>
@@ -117,6 +122,69 @@ window.toggleSectionStatus = async function(sectionId, newStatus) {
   } catch (error) {
     console.error(error);
     alert('حدث خطأ أثناء تغيير الحالة.');
+  }
+};
+
+// 1. فتح نافذة تعديل حساب الشعبة
+window.openEditSectionModal = async function(sectionId) {
+  const db = window.db;
+  if (!db) return;
+
+  try {
+    const secDoc = await getDoc(doc(db, 'sections', sectionId));
+    if (!secDoc.exists()) return alert('الشعبة غير موجودة.');
+
+    const data = secDoc.data();
+    document.getElementById('editSectionId').value = sectionId;
+    document.getElementById('editSectionName').value = data.name || '';
+    document.getElementById('editSectionUser').value = data.username || '';
+    document.getElementById('editSectionPass').value = '';
+
+    const modal = document.getElementById('editSectionAccountModal');
+    if (modal) modal.style.display = 'flex';
+  } catch (err) {
+    alert('خطأ في جلب بيانات الشعبة: ' + err.message);
+  }
+};
+
+// 2. إغلاق نافذة التعديل
+window.closeEditModal = function() {
+  const modal = document.getElementById('editSectionAccountModal');
+  if (modal) modal.style.display = 'none';
+};
+
+// 3. حفظ التغييرات على حساب الشعبة
+window.saveSectionAccountChanges = async function() {
+  const db = window.db;
+  if (!db) return;
+
+  const sectionId = document.getElementById('editSectionId').value;
+  const newName = document.getElementById('editSectionName').value.trim();
+  const newUser = document.getElementById('editSectionUser').value.trim();
+  const newPass = document.getElementById('editSectionPass').value.trim();
+
+  if (!newName || !newUser) {
+    return alert('يرجى كتابة اسم الشعبة واسم المستخدم.');
+  }
+
+  try {
+    const updateData = {
+      name: newName,
+      username: newUser
+    };
+
+    if (newPass) {
+      updateData.password = newPass;
+    }
+
+    await updateDoc(doc(db, 'sections', sectionId), updateData);
+
+    alert('تم تحديث بيانات حساب الشعبة بنجاح!');
+    window.closeEditModal();
+    window.loadAllSections();
+  } catch (err) {
+    console.error("خطأ التحديث:", err);
+    alert('حدث خطأ أثناء حفظ التغييرات: ' + err.message);
   }
 };
 
