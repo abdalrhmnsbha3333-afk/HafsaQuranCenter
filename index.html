@@ -2213,29 +2213,91 @@ init();
   </div>
 </div>
 <script type="module">
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { doc, setDoc, collection, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   window.migrateOldData = async function() {
+    if (!window.currentUserData || window.currentUserData.role !== 'admin') {
+      return alert('عذراً، الترحيل للمشرف فقط.');
+    }
+    if (!confirm('تم العثور على البيانات القديمة في sawaed_data! هل تريد ترحيل كافة الحلقات والطلاب للشعب الجديدة؟')) return;
+
     const db = window.db;
     if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
 
     try {
-      // فحص أحدث أسماء المجموعات المحتملة للبيانات القديمة
-      const possibleCollections = ['sawaed_data', 'data', 'users', 'sections', 'pupils', 'students_list'];
-      console.log("=== بدء فحص كافة المجموعات القديمة ===");
+      const batch = writeBatch(db);
+      let createdSections = 0;
+      let createdStudents = 0;
 
-      for (const colName of possibleCollections) {
-        const snap = await getDocs(collection(db, colName));
-        console.log(`المجموعة [${colName}]: تحتوي على ${snap.size} مستند.`);
-        if (snap.size > 0) {
-          snap.forEach(d => console.log(` - مستند (${d.id}):`, d.data()));
+      // 1. ترحيل الشعب الافتراضية والحلقات من sawaed-halaqat-list
+      const sawaedDataSnap = await getDocs(collection(db, 'sawaed_data'));
+      
+      for (const dataDoc of sawaedDataSnap.docs) {
+        const docId = dataDoc.id;
+        const rawVal = dataDoc.data().value;
+        if (!rawVal) continue;
+
+        let parsedVal;
+        try { parsedVal = JSON.parse(rawVal); } catch(e) { continue; }
+
+        // أ) ترحيل الحلقات/الشعب
+        if (docId === 'sawaed-halaqat-list' && Array.isArray(parsedVal)) {
+          parsedVal.forEach(halaqa => {
+            const secRef = doc(db, 'sections', halaqa.id);
+            batch.set(secRef, {
+              name: halaqa.name,
+              username: `sec_${halaqa.id}`,
+              isActive: true,
+              createdAt: serverTimestamp()
+            }, { merge: true });
+            createdSections++;
+          });
+        }
+
+        // ب) استخراج وترحيل الطلاب من ملفات الترتيب والتكوين sawaed-order / sawaed-config
+        if (docId.startsWith('sawaed-order') || docId.startsWith('sawaed-config')) {
+          let sectionId = 'SEC_MAIN_DEFAULT';
+          if (docId.includes('-h2')) sectionId = 'h2';
+          else if (docId.includes('-h5')) sectionId = 'h5';
+
+          let studentNames = [];
+          if (Array.isArray(parsedVal)) {
+            studentNames = parsedVal; // في حالة sawaed-order
+          } else if (parsedVal && parsedVal.students && Array.isArray(parsedVal.students)) {
+            studentNames = parsedVal.students.map(s => s.name || s.studentName).filter(Boolean);
+          }
+
+          studentNames.forEach((sName, idx) => {
+            if (typeof sName === 'string' && sName.trim()) {
+              const cleanName = sName.trim();
+              const studentRef = doc(db, 'students', `std_${sectionId}_${idx}_${cleanName.replace(/\s+/g, '_')}`);
+              batch.set(studentRef, {
+                name: cleanName,
+                sectionId: sectionId,
+                createdAt: serverTimestamp()
+              }, { merge: true });
+              createdStudents++;
+            }
+          });
         }
       }
 
-      alert("تم الفحص! افتح الكونسول (F12) لرؤية أسماء المجموعات التي تحتوي على بيانات.");
+      // إنشاء شعبة رئيسية افتراضية في حال عدم وجودها
+      batch.set(doc(db, 'sections', 'SEC_MAIN_DEFAULT'), {
+        name: "الشعبة العامة (الافتراضية)",
+        username: "default_section",
+        isActive: true,
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await batch.commit();
+
+      alert(`نجح الترحيل العظيم!\n- تم إنشاء/تحديث ${createdSections} شعبة حقيقية.\n- تم ترحيل ${createdStudents} طالب بنجاح بأسماءهم وشُعبهم!`);
+      
+      if (typeof window.loadAllSections === 'function') window.loadAllSections();
     } catch (err) {
-      console.error("خطأ أثناء الفحص:", err);
-      alert("حدث خطأ أثناء الفحص: " + err.message);
+      console.error("خطأ أثناء الترحيل الشامل:", err);
+      alert('حدث خطأ أثناء الترحيل: ' + err.message);
     }
   };
 </script>
