@@ -410,10 +410,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script type="module">
   // --- الاتصال بقاعدة بيانات Firebase (Firestore) ---
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs
-  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCW1HhqGGhkEvLk_BH1YitU0n5Eeba_qbM",
@@ -2295,9 +2291,18 @@ init();
     return query;
   }
 </script>
+<!-- ربط مكتبات Firebase v12 وتجهيز المتغيرات للنظام -->
 <script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-  window.getAuth = getAuth;
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+  // استخدام التطبيق المهيّأ أو إنشاء اتصال
+  const app = getApps().length > 0 ? getApps()[0] : initializeApp(window.firebaseConfig || {});
+
+  // إتاحة الكائنات عالمياً لملفات النظام
+  window.auth = getAuth(app);
+  window.db = getFirestore(app);
 </script>
 
 <!-- ملفات النظام الخاصة بنا -->
