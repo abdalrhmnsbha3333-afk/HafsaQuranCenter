@@ -192,24 +192,6 @@
     .phone-input{width:120px;}
   }
 
-  .lock-screen{
-    position:fixed;inset:0;background:linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
-    display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;
-  }
-  .lock-card{
-    background:#fff;border-radius:var(--radius);padding:34px 26px;max-width:320px;width:100%;
-    text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);
-  }
-  .lock-icon{font-size:42px;margin-bottom:6px;}
-  .lock-card h2{font-family:'Amiri',serif;color:var(--green-deep);margin:0 0 4px;font-size:22px;}
-  .lock-card p{color:#6b7a70;font-size:13px;margin:0 0 18px;}
-  .lock-card input{
-    width:100%;border:1.5px solid var(--sand-deep);border-radius:9px;padding:12px;font-size:22px;
-    text-align:center;letter-spacing:6px;margin-bottom:14px;font-family:inherit;background:var(--sand);color:var(--ink);
-  }
-  .lock-card input:focus{outline:2px solid var(--gold-soft);}
-  .lock-error{color:var(--danger);font-size:12.5px;margin-top:10px;display:none;}
-
   .balance-line{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--gold);margin:2px 0 10px;}
   .balance-reset-btn{
     border:1px solid var(--sand-deep);background:var(--sand);color:#8a9088;border-radius:7px;
@@ -278,76 +260,27 @@
   .monthly-row:last-child{border-bottom:none;}
   .monthly-count{font-weight:700;color:var(--gold);}
   .monthly-winner{font-size:12.5px;color:#4b5750;padding:4px 0;border-bottom:1px dashed var(--sand-deep);}
-  /* إلغاء وتغطية العناصر القديمة في صفحة الـ HTML الأساسية */
-#anDisp > div:not(.an-stage), 
-#anDisp > h1, 
-#anDisp > h2, 
-#anDisp > header, 
-#anDisp > .title,
-#anDisp > span:not(#anWarn) {
-  display: none !important;
-}
- 
+  
+  #anDisp > div:not(.an-stage), 
+  #anDisp > h1, 
+  #anDisp > h2, 
+  #anDisp > header, 
+  #anDisp > .title,
+  #anDisp > span:not(#anWarn) {
+    display: none !important;
+  }
 </style>
 </head>
 <body>
 
-<div class="lock-screen" id="lockScreen">
-  <div class="lock-card">
-    <div class="lock-icon">🔒</div>
-    <h2>سواعد الحفاظ</h2>
-    <p>أدخلي كلمة المرور للدخول</p>
-    <input type="password" id="lockPasswordInput" inputmode="numeric" placeholder="••••" autocomplete="off">
-    <button class="btn btn-green btn-block" id="lockSubmitBtn">دخول</button>
-    <p class="lock-error" id="lockError">كلمة المرور غير صحيحة، حاولي مرة ثانية</p>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  var APP_PASSWORD = '2006';
-  var UNLOCK_KEY = 'sawaed-unlocked';
-  var lockScreen = document.getElementById('lockScreen');
-  var input = document.getElementById('lockPasswordInput');
-  var btn = document.getElementById('lockSubmitBtn');
-  var err = document.getElementById('lockError');
-
-  function unlock(){
-    lockScreen.style.display = 'none';
-    document.getElementById('appRoot').style.display = 'block';
-  }
-
-  function tryUnlock(){
-    if(input.value === APP_PASSWORD){
-      try{ localStorage.setItem(UNLOCK_KEY, '1'); }catch(e){}
-      unlock();
-    } else {
-      err.style.display = 'block';
-      input.value = '';
-      input.focus();
-    }
-  }
-
-  btn.addEventListener('click', tryUnlock);
-  input.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryUnlock(); });
-
-  var alreadyUnlocked = false;
-  try{ alreadyUnlocked = localStorage.getItem(UNLOCK_KEY) === '1'; }catch(e){}
-  if(alreadyUnlocked){
-    unlock();
-  } else {
-    input.focus();
-  }
-});
-</script>
-
-<div class="wrap" id="appRoot" style="display:none;">
+<div class="wrap" id="appRoot">
 
   <header class="top">
     <div>
       <h1>مركز حفصة القراني</h1>
       <p>متابعة يومية للتسميع الجديد ومراجعة الحفظ</p>
     </div>
+    <button onclick="logoutUser()" style="background:var(--danger); color:#fff; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700;">تسجيل الخروج</button>
   </header>
 
   <div class="markaz-title">🕌 مركز حفصة</div>
@@ -409,7 +342,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 
 <script type="module">
-  // --- استيراد دوال Firebase v12 المطلوبة ---
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
   import { 
@@ -422,7 +354,6 @@ document.addEventListener('DOMContentLoaded', function(){
     getDocs 
   } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-  // --- الاتصال بقاعدة بيانات Firebase ---
   const firebaseConfig = {
     apiKey: "AIzaSyCW1HhqGGhkEvLk_BH1YitU0n5Eeba_qbM",
     authDomain: "sawaed-alhifaz.firebaseapp.com",
@@ -440,7 +371,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // إتاحة الكائنات عالمياً للنظام وملفات auth.js و admin.js
     window.db = db;
     window.auth = auth;
 
@@ -468,7 +398,6 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     };
 
-    // إعلام ملفات auth.js و admin.js باكتمل الجاهزية
     window.dispatchEvent(new Event('firebase-ready'));
 
   } catch (e) {
@@ -477,7 +406,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script type="module">
-// بديل محلي بالـ localStorage لو فشل الاتصال بفايربيز
 (function setupStorageFallback(){
   if(window.storage && typeof window.storage.get === 'function') return;
   const LS_PREFIX = 'sawaed_';
@@ -520,15 +448,13 @@ const DEFAULT_STUDENTS_H1 = [
   { id: 's5', name: 'عثمان', phone: '962797851555', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 },
   { id: 's6', name: 'بكر', phone: '962797851555', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 },
   { id: 's7', name: 'عبدالرحمن', phone: '962797851555', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 },
-  { id: 's8', name: 'يوسف', phone: '962787258710', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 },
-  { id: 's9', name: '', phone: '', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 } // احتياط
+  { id: 's8', name: 'يوسف', phone: '962787258710', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0, balance: 0 }
 ];
 
-// صندوق سحب "رصيد" الخاص بشعبة سواعد الحفاظ (h1) بس. مجموع قيمته 15 دينار بالضبط
 const DEFAULT_PRIZE_POOL = { '2': 1, '0.5': 6, '0.25': 12, '0.15': 30, '0.1': 25 };
 const DENOM_LABELS = { '2': '2 دينار', '0.5': 'نص دينار', '0.25': 'ربع دينار', '0.15': '15 قرش', '0.1': '10 قروش' };
 const DENOM_ORDER = ['2', '0.5', '0.25', '0.15', '0.1'];
-// طلاب حلقة "زاد الحفاظ" (الحلقة الثانية)
+
 const DEFAULT_STUDENTS_H2 = [
   { id: 'h2s1', name: 'وسام خليل', phone: '962787258710', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
   { id: 'h2s2', name: 'اوس الفيومي', phone: '962792760068', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
@@ -539,12 +465,9 @@ const DEFAULT_STUDENTS_H2 = [
   { id: 'h2s7', name: 'أحمد غسان', phone: '962788884051', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
   { id: 'h2s8', name: 'عمر أبو الريش', phone: '962796011942', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
   { id: 'h2s9', name: 'رشاد عميرة', phone: '962788355763', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
-  { id: 'h2s10', name: 'حمزة النادي', phone: '962779202586', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 },
-  { id: 'h2s11', name: '', phone: '', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 } // احتياط
+  { id: 'h2s10', name: 'حمزة النادي', phone: '962779202586', totalPoints: 0, totalPagesNew: 0, totalPagesReview: 0 }
 ];
 
-// --- دعم تعدد الحلقات ---
-// الحلقة "h1" بتستخدم المفاتيح القديمة بالضبط (بدون هجرة بيانات).
 const HALAQAT_LIST_KEY = 'sawaed-halaqat-list';
 const CURRENT_HALAQAH_LS_KEY = 'sawaed-current-halaqah';
 const DEFAULT_HALAQAT = [
@@ -572,7 +495,7 @@ async function loadHalaqat(){
       const parsed = JSON.parse(res.value);
       if(Array.isArray(parsed) && parsed.length){ halaqat = parsed; return; }
     }
-  }catch(e){ /* أول مرة */ }
+  }catch(e){ }
   halaqat = DEFAULT_HALAQAT.slice();
   await safeStorageSet(HALAQAT_LIST_KEY, JSON.stringify(halaqat));
 }
@@ -601,7 +524,6 @@ function renderHalaqahTabs(){
   addBtn.addEventListener('click', addNewHalaqah);
   wrap.appendChild(addBtn);
 
-  // زر حذف الشعبة المفتوحة حاليًا (h1 محمية لأنها بمفاتيح قديمة)
   if(currentHalaqahId !== 'h1'){
     const delBtn = document.createElement('button');
     delBtn.className = 'halaqah-add-btn';
@@ -612,7 +534,6 @@ function renderHalaqahTabs(){
   }
 }
 
-// يمسح فعليًا كل بيانات الشعبة من قاعدة البيانات (إعدادات، ترتيب، سجل الأيام)
 async function purgeHalaqahData(id){
   if(!id || id === 'h1') return;
   const keys = [STORAGE_CONFIG_KEY + ':' + id, 'sawaed-order-' + id];
@@ -627,12 +548,12 @@ async function deleteHalaqah(id){
   const h = halaqat.find(x => x.id === id);
   if(!h) return;
   if(halaqat.length <= 1){ alert('ما بتقدري تحذفي آخر شعبة.'); return; }
-  if(!confirm(`متأكدة إنك بدك تحذفي شعبة "${h.name}" نهائيًا؟ رح تنحذف كل بيانات طلابها ونقاطهم وسجل أيامها، وما بتنرجع.`)) return;
+  if(!confirm(`متأكدة إنك بدك تحذفي شعبة "${h.name}" نهائيًا؟`)) return;
   try{
     await purgeHalaqahData(id);
   }catch(e){
     console.error(e);
-    showSaveStatus('⚠️ تعذّر مسح بيانات الشعبة، ما انحذفت', true);
+    showSaveStatus('⚠️ تعذّر مسح بيانات الشعبة', true);
     return;
   }
   halaqat = halaqat.filter(x => x.id !== id);
@@ -645,7 +566,6 @@ async function deleteHalaqah(id){
 async function addNewHalaqah(){
   const name = prompt('اسم الشعبة الجديدة؟');
   if(!name || !name.trim()) return;
-  // معرّف فريد دائمًا، عشان ما يتكرر id شعبة انحذفت قبل
   const id = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   halaqat.push({ id, name: name.trim() });
   await saveHalaqat();
@@ -698,7 +618,7 @@ async function safeStorageSet(key, value, attempts){
       const res = await window.storage.set(key, value, false);
       if(res) return true;
     }catch(e){
-      console.error(`storage set failed (attempt ${i+1}/${attempts})`, e);
+      console.error(`storage set failed (${i+1}/${attempts})`, e);
     }
     if(i < attempts - 1){
       await new Promise(r => setTimeout(r, 600 * (i + 1)));
@@ -723,7 +643,7 @@ async function loadConfig(){
         config = parsed;
       }
     }
-  }catch(e){ /* أول مرة لهاي الحلقة */ }
+  }catch(e){ }
 
   if(currentHalaqahId === 'h1' && (!config.version || config.version < CONFIG_VERSION)){
     const defaultsById = {};
@@ -780,14 +700,14 @@ async function loadEntries(dateStr){
       entries = JSON.parse(res.value);
       return;
     }
-  }catch(e){ /* no entries yet */ }
+  }catch(e){ }
   entries = {};
 }
 
 async function saveEntries(dateStr){
   const ok = await safeStorageSet(entryKey(dateStr), JSON.stringify(entries));
   if(!ok){
-    showSaveStatus('⚠️ تعذّر حفظ آخر تعديل بالجدول، جرّبي تكتبيه مرة ثانية', true);
+    showSaveStatus('⚠️ تعذّر حفظ آخر تعديل بالجدول', true);
   }
 }
 
@@ -822,7 +742,7 @@ function renderStudents(){
         <div class="student-name-wrap">
           <div class="avatar">${initials(student.name)}</div>
           <div>
-            <div class="student-name" contenteditable="true" data-id="${student.id}" data-field="name">${student.name || 'اسم الطالب (احتياط)'}</div>
+            <div class="student-name" contenteditable="true" data-id="${student.id}" data-field="name">${student.name || 'اسم الطالب'}</div>
           </div>
         </div>
         <input class="phone-input" data-id="${student.id}" data-field="phone" type="text" placeholder="9627xxxxxxxx" value="${student.phone || ''}">
@@ -915,7 +835,7 @@ async function resetStudentBalance(studentId){
 }
 
 async function resetAllBalances(){
-  if(!confirm('متأكدة إنك بدك تصفّري رصيد كل الطلاب بشعبة سواعد الحفاظ؟')) return;
+  if(!confirm('متأكدة إنك بدك تصفّري رصيد كل الطلاب؟')) return;
   config.students.forEach(s => { s.balance = 0; });
   await saveConfig();
   renderStudents();
@@ -967,7 +887,7 @@ async function onNameEdit(e){
   const student = config.students.find(s=>s.id===id);
   if(!student) return;
   const newName = e.target.textContent.trim();
-  student.name = newName === 'اسم الطالب (احتياط)' ? '' : newName;
+  student.name = newName === 'اسم الطالب' ? '' : newName;
   await saveConfig();
   renderStudents();
 }
@@ -1014,7 +934,6 @@ function wrapText(ctx, text, maxWidth){
 
 const LB_BLOCK_HEIGHT = 175;
 
-// بلوك الترتيب بالصورة: أعلى 3 بالنقاط + سطر لترتيب الطالب نفسه لو مش ضمن أعلى 3
 function drawLeaderboardBlock(ctx, canvas, y, padding, studentId){
   const named = config.students.filter(s => (s.name||'').trim());
   const byPoints = [...named].sort((a,b) => (b.totalPoints||0) - (a.totalPoints||0));
@@ -1119,7 +1038,7 @@ async function makeStudentCanvas(student, entry, dateStr){
   ctx.font = '700 22px Tajawal';
   ctx.fillStyle = '#e9d4a8';
   const attLabel = entry.attendance === 'present' ? '  •  حاضر ✓' : (entry.attendance === 'absent' ? '  •  غائب ✕' : '');
-  ctx.fillText((student.name || 'طالب احتياط') + attLabel, canvas.width - padding, 115);
+  ctx.fillText((student.name || 'طالب') + attLabel, canvas.width - padding, 115);
 
   let y = 165;
   fields.forEach((f, idx)=>{
@@ -1259,7 +1178,6 @@ function canvasToBlob(canvas){
   return new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/png'));
 }
 
-// ننادي navigator.clipboard.write فورًا (بدون await قبله) عشان ما تنلغي صلاحية لمسة المستخدم (سفاري)
 let clipboardBlocked = false;
 
 function copyCanvasToClipboard(canvasPromise){
@@ -1275,11 +1193,9 @@ function copyCanvasToClipboard(canvasPromise){
       if(e && e.name === 'NotAllowedError'){
         clipboardBlocked = true;
       }
-      console.warn('clipboard copy not available, will download instead:', e && e.message);
       return false;
     });
   }catch(e){
-    console.warn('clipboard copy not available, will download instead:', e && e.message);
     return Promise.resolve(false);
   }
 }
@@ -1309,7 +1225,7 @@ async function sendToStudent(studentId){
   }
   const phone = normalizePhone(student.phone);
   if(!phone){
-    alert('عبّي رقم هاتف الطالب (بصيغة دولية، مثال: 962791234567) قبل الإرسال.');
+    alert('عبّي رقم هاتف الطالب قبل الإرسال.');
     return;
   }
 
@@ -1326,17 +1242,17 @@ async function sendToStudent(studentId){
   window.open(waLink, '_blank');
 
   if(copied){
-    alert('✅ الصورة انسخت! روحي على واتساب واعملي لصق (Ctrl+V بالكمبيوتر، أو اضغطي مطولاً على مربع الكتابة واختاري "لصق" بالموبايل).');
+    alert('✅ الصورة انسخت!');
   } else {
     await downloadCanvas(canvas, `${student.name}-${currentDate}.png`);
-    alert('المتصفح ما بيدعم النسخ التلقائي للصورة هالمرة، فنزّلتها إلك — أرفقيها يدويًا من التنزيلات بمحادثة واتساب.');
+    alert('نزلت الصورة بالتنزيلات، يمكنك إرفاقها يدويًا.');
   }
 }
 
 async function sendToGroup(){
   const link = document.getElementById('groupLinkInput').value.trim();
   if(!link){
-    alert('الصقي رابط دعوة مجموعة سواعد الحفاظ أول (من معلومات المجموعة ← دعوة عبر رابط).');
+    alert('الصقي رابط دعوة المجموعة أولاً.');
     return;
   }
 
@@ -1349,16 +1265,16 @@ async function sendToGroup(){
   window.open(link, '_blank');
 
   if(copied){
-    alert('✅ الصورة انسخت! روحي على المجموعة واعملي لصق (Ctrl+V بالكمبيوتر، أو اضغطي مطولاً على مربع الكتابة واختاري "لصق" بالموبايل).');
+    alert('✅ الصورة انسخت!');
   } else {
-    await downloadCanvas(canvas, `جدول-سواعد-الحفاظ-${currentDate}.png`);
-    alert('المتصفح ما بيدعم النسخ التلقائي للصورة، فنزّلتها إلك — أرفقيها يدويًا من التنزيلات بمحادثة المجموعة.');
+    await downloadCanvas(canvas, `جدول-${currentDate}.png`);
+    alert('نزلت الصورة بالتنزيلات، يمكنك إرفاقها يدويًا.');
   }
 }
 
 function nameById(id){
   const s = config.students.find(s=>s.id===id);
-  return s ? (s.name || 'احتياط') : id;
+  return s ? (s.name || 'طالب') : id;
 }
 
 async function loadLogDates(){
@@ -1371,7 +1287,7 @@ async function loadLogDates(){
         .sort()
         .reverse();
     }
-  }catch(e){ /* nothing saved yet */ }
+  }catch(e){ }
   return [];
 }
 
@@ -1477,20 +1393,20 @@ function initLeaderboardTabs(){
 }
 
 async function resetPagesTotals(){
-  const ok = confirm('متأكدة إنك بدك تصفّري صفحات الحفظ والمراجعة لكل الطلاب؟ النقاط رح تضل زي ما هي، وسجل الأيام السابقة ما بينلغي.');
+  const ok = confirm('متأكدة إنك بدك تصفّري صفحات الحفظ والمراجعة؟');
   if(!ok) return;
   config.students.forEach(s => { s.totalPagesNew = 0; s.totalPagesReview = 0; });
   await saveConfig();
   renderLeaderboard();
   renderStudents();
-  showSaveStatus('✅ تم تصفير صفحات الحفظ والمراجعة', false);
+  showSaveStatus('✅ تم تصفير الصفحات', false);
 }
 
 async function deleteStudent(studentId){
   const student = config.students.find(s=>s.id===studentId);
   if(!student) return;
-  const label = (student.name && student.name.trim()) ? student.name : 'هالطالب (بدون اسم)';
-  if(!confirm(`متأكدة إنك بدك تحذفي "${label}"؟ هاد الإجراء ما بينرجع، وبينحذف معه كل نقاطه وصفحاته المتراكمة.`)){
+  const label = (student.name && student.name.trim()) ? student.name : 'هالطالب';
+  if(!confirm(`متأكدة إنك بدك تحذفي "${label}"؟`)){
     return;
   }
   config.students = config.students.filter(s => s.id !== studentId);
@@ -1516,7 +1432,7 @@ async function addNewStudent(){
   config.students.push({ id, name:'', phone:'', totalPoints:0, totalPagesNew:0, totalPagesReview:0 });
   await saveConfig();
   renderStudents();
-  showSaveStatus('✅ تمت إضافة بطاقة طالب جديد، عبّي اسمه ورقمه', false);
+  showSaveStatus('✅ تمت إضافة بطاقة طالب جديد', false);
 }
 
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
@@ -1578,15 +1494,11 @@ function renderDrawSection(){
 }
 
 async function refillPrizePool(){
-  const current = poolTotalCount(config.prizePool || {});
-  const msg = current > 0
-    ? `لسا بالصندوق ${current} قطعة. متأكدة إنك بدك تعبّيه من جديد لكامل القيمة (15 دينار)؟`
-    : 'بدك تعبّي صندوق السحب من جديد لكامل القيمة (15 دينار)؟';
-  if(!confirm(msg)) return;
+  if(!confirm('بدك تعبّي صندوق السحب من جديد؟')) return;
   config.prizePool = { ...DEFAULT_PRIZE_POOL };
   await saveConfig();
   renderDrawSection();
-  showSaveStatus('✅ تم تعبئة صندوق السحب من جديد (15 د.ا)', false);
+  showSaveStatus('✅ تم تعبئة الصندوق', false);
 }
 
 async function startDraw(studentId){
@@ -1607,7 +1519,7 @@ async function startDraw(studentId){
 
   if(!denom){
     stage.innerHTML = '<div class="draw-empty">😢 نفذ صندوق السحب بالكامل!</div>';
-    showSaveStatus('🚨 نفذ صندوق السحب بالكامل! لازم تعبّيه من جديد.', true);
+    showSaveStatus('🚨 نفذ الصندوق بالكامل!', true);
     return;
   }
 
@@ -1621,13 +1533,8 @@ async function startDraw(studentId){
 
   renderStudents();
   renderDrawSection();
-
-  if(poolTotalCount(pool) === 0){
-    showSaveStatus('🚨 نفذ صندوق السحب بالكامل! لازم تعبّيه من جديد.', true);
-  }
 }
 
-// --- ترتيب عشوائي لدور الطلاب (متزامن عبر الأجهزة) ---
 function orderKey(){
   return currentHalaqahId === 'h1' ? 'sawaed-order' : ('sawaed-order-' + currentHalaqahId);
 }
@@ -1671,25 +1578,21 @@ async function loadSavedOrder(){
         return;
       }
     }
-  }catch(e){ /* ما في ترتيب محفوظ */ }
+  }catch(e){ }
   clearOrderList();
 }
 
 async function shuffleStudentOrder(){
   const names = config.students.map(s => (s.name||'').trim()).filter(Boolean);
   if(!names.length){
-    alert('ضيفي أسماء الطلاب أول قبل ما ترتّبيهم عشوائيًا.');
+    alert('ضيفي أسماء الطلاب أولاً.');
     return;
   }
   const shuffled = shuffleArray(names);
   renderOrderRows(shuffled);
-  const ok = await safeStorageSet(orderKey(), JSON.stringify(shuffled));
-  if(!ok){
-    showSaveStatus('⚠️ اترتب الطلاب بس تعذّر حفظ الترتيب للمشاركة', true);
-  }
+  await safeStorageSet(orderKey(), JSON.stringify(shuffled));
 }
 
-// --- الجائزة الشهرية (قائمة مشتركة لكل الشعب) ---
 const MONTHLY_KEY = 'sawaed-monthly-prizes';
 const DEFAULT_MONTHLY_PRIZES = [
   { id: 'perfume',  label: '🌸 عطر بقيمة 3 دنانير',   count: 3 },
@@ -1715,7 +1618,7 @@ async function loadMonthlyPool(){
   try{
     const res = await window.storage.get(MONTHLY_KEY, true);
     if(res && res.value) data = JSON.parse(res.value);
-  }catch(e){ /* أول مرة */ }
+  }catch(e){ }
   if(!data || !data.pool){
     data = freshMonthlyData();
     await safeStorageSet(MONTHLY_KEY, JSON.stringify(data));
@@ -1726,9 +1629,7 @@ async function loadMonthlyPool(){
 }
 
 async function saveMonthlyData(){
-  const ok = await safeStorageSet(MONTHLY_KEY, JSON.stringify(monthlyData));
-  if(!ok) showSaveStatus('⚠️ تعذّر حفظ الجائزة الشهرية، جرّبي مرة ثانية', true);
-  return ok;
+  return await safeStorageSet(MONTHLY_KEY, JSON.stringify(monthlyData));
 }
 
 function renderMonthlySection(){
@@ -1742,7 +1643,7 @@ function renderMonthlySection(){
 
   wrap.innerHTML = `
     <div class="monthly-card">
-      <h3>🏅 الجائزة الشهرية (مشتركة لكل الشعب)</h3>
+      <h3>🏅 الجائزة الشهرية</h3>
       <div class="draw-row">
         <select id="monthlyStudentSelect">
           ${named.length ? named.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '<option value="">لا يوجد طلاب بعد</option>'}
@@ -1762,7 +1663,7 @@ function renderMonthlySection(){
         ${lastWinners.map(w => `<div class="monthly-winner">${w.student} (${w.halaqah}) — ${w.prize}</div>`).join('')}
       ` : ''}
 
-      <button class="btn btn-outline btn-block" style="margin-top:12px;" id="monthlyRefillBtn">🔄 تعبئة الجوائز من جديد (شهر جديد)</button>
+      <button class="btn btn-outline btn-block" style="margin-top:12px;" id="monthlyRefillBtn">🔄 تعبئة الجوائز من جديد</button>
     </div>
   `;
 
@@ -1786,7 +1687,6 @@ async function startMonthlyDraw(studentId){
     await sleep(650);
   }
 
-  // نقرأ أحدث نسخة من السحابة قبل السحب
   await loadMonthlyPool();
 
   const bag = [];
@@ -1816,7 +1716,7 @@ async function startMonthlyDraw(studentId){
 }
 
 async function refillMonthlyPool(){
-  if(!confirm('متأكدة إنك بدك تعبّي الجوائز الشهرية من جديد؟ رح يتصفّر سجل الفائزين كمان.')) return;
+  if(!confirm('متأكدة إنك بدك تعبّي الجوائز الشهرية من جديد؟')) return;
   monthlyData = freshMonthlyData();
   await saveMonthlyData();
   renderMonthlySection();
@@ -1883,9 +1783,7 @@ async function init(){
 init();
 </script>
 
-<!-- ===================== قسم الامتحانات =====================
-  بيضيف لحاله: الكرت + النافذة + التنسيق، وبيستخدم نفس قاعدة البيانات (window.storage).
-================================================================ -->
+<!-- ===================== قسم الامتحانات ===================== -->
 <style>
   .exam-card{background:linear-gradient(135deg,#fff 0%,#eaf1ec 100%);border:1.5px solid var(--green);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
   .exam-card h3{margin:0 0 6px;font-size:15px;color:var(--green-deep);}
@@ -1919,240 +1817,8 @@ init();
   .ex-log-l{color:#4b5750;line-height:1.7;}
 </style>
 
-<script type="module">
-(function(){
-  const JUZ = ["الجزء 1 (آلَمَ)", "الجزء 2 (سَيَقُولُ)", "الجزء 3 (تِلْكَ الرُّسُلُ)", "الجزء 4 (كُلُّ الطَّعَامِ)", "الجزء 5 (وَالْمُحْصَنَاتُ)", "الجزء 6 (لا يُحِبُّ اللَّهُ)", "الجزء 7 (وَإِذَا سَمِعُوا)", "الجزء 8 (وَلَوْ أَنَّنَا)", "الجزء 9 (قَالَ الْمَلأُ)", "الجزء 10 (وَاعْلَمُوا)", "الجزء 11 (يَعْتَذِرُونَ)", "الجزء 12 (وَمَا مِنْ دَابَّةٍ)", "الجزء 13 (وَمَا أُبَرِّئُ)", "الجزء 14 (رُبَمَا)", "الجزء 15 (سُبْحَانَ الَّذِي)", "الجزء 16 (قَالَ أَلَمْ)", "الجزء 17 (اقْتَرَبَ)", "الجزء 18 (قَدْ أَفْلَحَ)", "الجزء 19 (وَقَالَ الَّذِينَ)", "الجزء 20 (أَمَّنْ خَلَقَ)", "الجزء 21 (اتْلُ مَا أُوحِيَ)", "الجزء 22 (وَمَنْ يَقْنُتْ)", "الجزء 23 (وَمَا لِيَ)", "الجزء 24 (فَمَنْ أَظْلَمُ)", "الجزء 25 (إِلَيْهِ يُرَدُّ)", "الجزء 26 (حم)", "الجزء 27 (قَالَ فَمَا خَطْبُكُمْ)", "الجزء 28 (قَدْ سَمِعَ اللَّهُ)", "الجزء 29 (تَبَارَكَ)", "الجزء 30 (عَمَّ)"];
-  const POS = [["سورة البقرة - آية (1) : بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ * الم * ذَٰلِكَ الْكِتَابُ لا رَيْبَ فِيهِ","سورة البقرة - آية (6) : إِنَّ الَّذِينَ كَفَرُوا سَوَاءٌ عَلَيْهِمْ أَأَنْذَرْتَهُمْ أَمْ لَمْ تُنْذِرْهُمْ","سورة البقرة - آية (17) : مَثَلُهُمْ كَمَثَلِ الَّذِي اسْتَوْقَدَ نَارًا","سورة البقرة - آية (21) : يَا أَيُّهَا النَّاسُ اعْبُدُوا رَبَّكُمُ الَّذِي خَلَقَكُمْ وَالَّذِينَ مِنْ قَبْلِكُمْ","سورة البقرة - آية (26) : إِنَّ اللَّهَ لا يَسْتَحْيِي أَنْ يَضْرِبَ مَثَلا مَا بَعُوضَةً فَمَا فَوْقَهَا","سورة البقرة - آية (30) : وَإِذْ قَالَ رَبُّكَ لِلْمَلاَئِكَةِ إِنِّي جَاعِلٌ فِي الأَرْضِ خَلِيفَةً","سورة البقرة - آية (35) : وَقُلْنَا يَا آدَمُ اسْكُنْ أَنْتَ وَزَوْجُكَ الْجَنَّةَ","سورة البقرة - آية (40) : يَا بَنِي إِسْرَائِيلَ اذْكُرُوا نِعْمَتِيَ الَّتِي أَنْعَمْتُ عَلَيْكُمْ","سورة البقرة - آية (49) : وَإِذْ نَجَّيْنَاكُمْ مِنْ آلِ فِرْعَوْنَ يَسُومُونَكُمْ سُوءَ الْعَذَابِ","سورة البقرة - آية (58) : وَإِذْ قُلْنَا ادْخُلُوا هَٰذِهِ الْقَرْيَةَ فَكُلُوا مِنْهَا حَيْثُ شِئْتُمْ رَغَدًا","سورة البقرة - آية (62) : إِنَّ الَّذِينَ آمَنُوا وَالَّذِينَ هَادُوا وَالنَّصَارَىٰ وَالصَّابِئِينَ","سورة البقرة - آية (67) : وَإِذْ قَالَ مُوسَىٰ لِقَوْمِهِ إِنَّ اللَّهَ يَأْمُرُكُمْ أَنْ تَذْبَحُوا بَقَرَةً","سورة البقرة - آية (75) : أَفَتَطْمَعُونَ أَنْ يُؤْمِنُوا لَكُمْ وَقَدْ كَانَ فَرِيقٌ مِنْهُمْ يَسْمَعُونَ كَلامَ اللَّهِ","سورة البقرة - آية (83) : وَإِذْ أَخَذْنَا مِيثَاقَ بَنِي إِسْرَائِيلَ لا تَعْبُدُونَ إِلا اللَّهَ","سورة البقرة - آية (87) : وَلَقَدْ آتَيْنَا مُوسَى الْكِتَابَ وَقَفَّيْنَا مِنْ بَعْدِهِ بِالرُّسُلِ","سورة البقرة - آية (92) : وَلَقَدْ جَاءَكُمْ مُوسَىٰ بِالْبَيِّنَاتِ ثُمَّ اتَّخَذْتُمُ الْعِجْلَ مِنْ بَعْدِهِ","سورة البقرة - آية (97) : قُلْ مَنْ كَانَ عَدُوًّا لِجِبْرِيلَ فَإِنَّهُ نَزَّلَهُ عَلَىٰ قَلْبِكَ بِإِذْنِ اللَّهِ","سورة البقرة - آية (102) : وَاتَّبَعُوا مَا تَتْلُو الشَّيَاطِينُ عَلَىٰ مُلْكِ سُلَيْمَانَ","سورة البقرة - آية (106) : مَا نَنْسَخْ مِنْ آيَةٍ أَوْ نُنْسِهَا نَأْتِ بِخَيْرٍ مِنْهَا أَوْ مِثْلِهَا","سورة البقرة - آية (111) : وَقَالُوا لَنْ يَدْخُلَ الْجَنَّةَ إِلا مَنْ كَانَ هُودًا أَوْ نَصَارَىٰ","سورة البقرة - آية (116) : وَقَالُوا اتَّخَذَ اللَّهُ وَلَدًا سُبْحَانَهُ","سورة البقرة - آية (120) : وَلَنْ تَرْضَىٰ عَنْكَ الْيَهُودُ وَلا النَّصَارَىٰ حَتَّىٰ تَتَّبِعَ مِلَّتَهُمْ","سورة البقرة - آية (124) : وَإِذِ ابْتَلَىٰ إِبْرَاهِيمَ رَبُّهُ بِكَلِمَاتٍ فَأَتَمَّهُنَّ","سورة البقرة - آية (127) : وَإِذْ يَرْفَعُ إِبْرَاهِيمُ الْقَوَاعِدَ مِنَ الْبَيْتِ وَإِسْمَاعِيلُ","سورة البقرة - آية (131) : إِذْ قَالَ لَهُ رَبُّهُ أَسْلِمْ قَالَ أَسْلَمْتُ لِرَبِّ الْعَالَمِينَ","سورة البقرة - آية (135) : وَقَالُوا كُونُوا هُودًا أَوْ نَصَارَىٰ تَهْتَدُوا","سورة البقرة - آية (138) : صِبْغَةَ اللَّهِ وَمَنْ أَحْسَنُ مِنَ اللَّهِ صِبْغَةً","سورة البقرة - آية (141) : تِلْكَ أُمَّةٌ قَدْ خَلَتْ لَهَا مَا كَسَبَتْ وَلَكُمْ مَا كَسَبْتُمْ","سورة البقرة - آية (1) : من قوله تعالى في سورة البقرة (آية 1)","سورة البقرة - آية (12) : من قوله تعالى في سورة البقرة (آية 12)","سورة البقرة - آية (23) : من قوله تعالى في سورة البقرة (آية 23)","سورة البقرة - آية (34) : من قوله تعالى في سورة البقرة (آية 34)","سورة البقرة - آية (45) : من قوله تعالى في سورة البقرة (آية 45)","سورة البقرة - آية (56) : من قوله تعالى في سورة البقرة (آية 56)","سورة البقرة - آية (67) : من قوله تعالى في سورة البقرة (آية 67)","سورة البقرة - آية (78) : من قوله تعالى في سورة البقرة (آية 78)","سورة البقرة - آية (89) : من قوله تعالى في سورة البقرة (آية 89)","سورة البقرة - آية (100) : من قوله تعالى في سورة البقرة (آية 100)","سورة البقرة - آية (111) : من قوله تعالى في سورة البقرة (آية 111)","سورة البقرة - آية (122) : من قوله تعالى في سورة البقرة (آية 122)"],["سورة البقرة - آية (142) : من قوله تعالى في سورة البقرة (آية 142)","سورة البقرة - آية (144) : من قوله تعالى في سورة البقرة (آية 144)","سورة البقرة - آية (146) : من قوله تعالى في سورة البقرة (آية 146)","سورة البقرة - آية (148) : من قوله تعالى في سورة البقرة (آية 148)","سورة البقرة - آية (150) : من قوله تعالى في سورة البقرة (آية 150)","سورة البقرة - آية (152) : من قوله تعالى في سورة البقرة (آية 152)","سورة البقرة - آية (154) : من قوله تعالى في سورة البقرة (آية 154)","سورة البقرة - آية (156) : من قوله تعالى في سورة البقرة (آية 156)","سورة البقرة - آية (158) : من قوله تعالى في سورة البقرة (آية 158)","سورة البقرة - آية (160) : من قوله تعالى في سورة البقرة (آية 160)","سورة البقرة - آية (162) : من قوله تعالى في سورة البقرة (آية 162)","سورة البقرة - آية (164) : من قوله تعالى في سورة البقرة (آية 164)","سورة البقرة - آية (166) : من قوله تعالى في سورة البقرة (آية 166)","سورة البقرة - آية (168) : من قوله تعالى في سورة البقرة (آية 168)","سورة البقرة - آية (170) : من قوله تعالى في سورة البقرة (آية 170)","سورة البقرة - آية (172) : من قوله تعالى في سورة البقرة (آية 172)","سورة البقرة - آية (174) : من قوله تعالى في سورة البقرة (آية 174)","سورة البقرة - آية (176) : من قوله تعالى في سورة البقرة (آية 176)","سورة البقرة - آية (178) : من قوله تعالى في سورة البقرة (آية 178)","سورة البقرة - آية (180) : من قوله تعالى في سورة البقرة (آية 180)","سورة البقرة - آية (182) : من قوله تعالى في سورة البقرة (آية 182)","سورة البقرة - آية (184) : من قوله تعالى في سورة البقرة (آية 184)","سورة البقرة - آية (186) : من قوله تعالى في سورة البقرة (آية 186)","سورة البقرة - آية (188) : من قوله تعالى في سورة البقرة (آية 188)","سورة البقرة - آية (190) : من قوله تعالى في سورة البقرة (آية 190)","سورة البقرة - آية (192) : من قوله تعالى في سورة البقرة (آية 192)","سورة البقرة - آية (194) : من قوله تعالى في سورة البقرة (آية 194)","سورة البقرة - آية (196) : من قوله تعالى في سورة البقرة (آية 196)","سورة البقرة - آية (198) : من قوله تعالى في سورة البقرة (آية 198)","سورة البقرة - آية (200) : من قوله تعالى في سورة البقرة (آية 200)","سورة البقرة - آية (202) : من قوله تعالى في سورة البقرة (آية 202)","سورة البقرة - آية (204) : من قوله تعالى في سورة البقرة (آية 204)","سورة البقرة - آية (206) : من قوله تعالى في سورة البقرة (آية 206)","سورة البقرة - آية (208) : من قوله تعالى في سورة البقرة (آية 208)","سورة البقرة - آية (210) : من قوله تعالى في سورة البقرة (آية 210)","سورة البقرة - آية (212) : من قوله تعالى في سورة البقرة (آية 212)","سورة البقرة - آية (214) : من قوله تعالى في سورة البقرة (آية 214)","سورة البقرة - آية (216) : من قوله تعالى في سورة البقرة (آية 216)","سورة البقرة - آية (218) : من قوله تعالى في سورة البقرة (آية 218)","سورة البقرة - آية (220) : من قوله تعالى في سورة البقرة (آية 220)"],["سورة البقرة - آية (253) : من قوله تعالى في سورة البقرة (آية 253)","سورة آل عمران - آية (1) : من قوله تعالى في سورة آل عمران (آية 1)","سورة البقرة - آية (254) : من قوله تعالى في سورة البقرة (آية 254)","سورة آل عمران - آية (5) : من قوله تعالى في سورة آل عمران (آية 5)","سورة البقرة - آية (255) : من قوله تعالى في سورة البقرة (آية 255)","سورة آل عمران - آية (9) : من قوله تعالى في سورة آل عمران (آية 9)","سورة البقرة - آية (256) : من قوله تعالى في سورة البقرة (آية 256)","سورة آل عمران - آية (13) : من قوله تعالى في سورة آل عمران (آية 13)","سورة البقرة - آية (257) : من قوله تعالى في سورة البقرة (آية 257)","سورة آل عمران - آية (17) : من قوله تعالى في سورة آل عمران (آية 17)","سورة البقرة - آية (258) : من قوله تعالى في سورة البقرة (آية 258)","سورة آل عمران - آية (21) : من قوله تعالى في سورة آل عمران (آية 21)","سورة البقرة - آية (259) : من قوله تعالى في سورة البقرة (آية 259)","سورة آل عمران - آية (25) : من قوله تعالى في سورة آل عمران (آية 25)","سورة البقرة - آية (260) : من قوله تعالى في سورة البقرة (آية 260)","سورة آل عمران - آية (29) : من قوله تعالى في سورة آل عمران (آية 29)","سورة البقرة - آية (261) : من قوله تعالى في سورة البقرة (آية 261)","سورة آل عمران - آية (33) : من قوله تعالى في سورة آل عمران (آية 33)","سورة البقرة - آية (262) : من قوله تعالى في سورة البقرة (آية 262)","سورة آل عمران - آية (37) : من قوله تعالى في سورة آل عمران (آية 37)","سورة البقرة - آية (263) : من قوله تعالى في سورة البقرة (آية 263)","سورة آل عمران - آية (41) : من قوله تعالى في سورة آل عمران (آية 41)","سورة البقرة - آية (264) : من قوله تعالى في سورة البقرة (آية 264)","سورة آل عمران - آية (45) : من قوله تعالى في سورة آل عمران (آية 45)","سورة البقرة - آية (265) : من قوله تعالى في سورة البقرة (آية 265)","سورة آل عمران - آية (49) : من قوله تعالى في سورة آل عمران (آية 49)","سورة البقرة - آية (266) : من قوله تعالى في سورة البقرة (آية 266)","سورة آل عمران - آية (53) : من قوله تعالى في سورة آل عمران (آية 53)","سورة البقرة - آية (267) : من قوله تعالى في سورة البقرة (آية 267)","سورة آل عمران - آية (57) : من قوله تعالى في سورة آل عمران (آية 57)","سورة البقرة - آية (268) : من قوله تعالى في سورة البقرة (آية 268)","سورة آل عمران - آية (61) : من قوله تعالى في سورة آل عمران (آية 61)","سورة البقرة - آية (269) : من قوله تعالى في سورة البقرة (آية 269)","سورة آل عمران - آية (65) : من قوله تعالى في سورة آل عمران (آية 65)","سورة البقرة - آية (270) : من قوله تعالى في سورة البقرة (آية 270)","سورة آل عمران - آية (69) : من قوله تعالى في سورة آل عمران (آية 69)","سورة البقرة - آية (271) : من قوله تعالى في سورة البقرة (آية 271)","سورة آل عمران - آية (73) : من قوله تعالى في سورة آل عمران (آية 73)","سورة البقرة - آية (272) : من قوله تعالى في سورة البقرة (آية 272)","سورة آل عمران - آية (77) : من قوله تعالى في سورة آل عمران (آية 77)"],["سورة آل عمران - آية (92) : من قوله تعالى في سورة آل عمران (آية 92)","سورة النساء - آية (1) : من قوله تعالى في سورة النساء (آية 1)","سورة آل عمران - آية (97) : من قوله تعالى في سورة آل عمران (آية 97)","سورة النساء - آية (2) : من قوله تعالى في سورة النساء (آية 2)","سورة آل عمران - آية (102) : من قوله تعالى في سورة آل عمران (آية 102)","سورة النساء - آية (3) : من قوله تعالى في سورة النساء (آية 3)","سورة آل عمران - آية (107) : من قوله تعالى في سورة آل عمران (آية 107)","سورة النساء - آية (4) : من قوله تعالى في سورة النساء (آية 4)","سورة آل عمران - آية (112) : من قوله تعالى في سورة آل عمران (آية 112)","سورة النساء - آية (5) : من قوله تعالى في سورة النساء (آية 5)","سورة آل عمران - آية (117) : من قوله تعالى في سورة آل عمران (آية 117)","سورة النساء - آية (6) : من قوله تعالى في سورة النساء (آية 6)","سورة آل عمران - آية (122) : من قوله تعالى في سورة آل عمران (آية 122)","سورة النساء - آية (7) : من قوله تعالى في سورة النساء (آية 7)","سورة آل عمران - آية (127) : من قوله تعالى في سورة آل عمران (آية 127)","سورة النساء - آية (8) : من قوله تعالى في سورة النساء (آية 8)","سورة آل عمران - آية (132) : من قوله تعالى في سورة آل عمران (آية 132)","سورة النساء - آية (9) : من قوله تعالى في سورة النساء (آية 9)","سورة آل عمران - آية (137) : من قوله تعالى في سورة آل عمران (آية 137)","سورة النساء - آية (10) : من قوله تعالى في سورة النساء (آية 10)","سورة آل عمران - آية (142) : من قوله تعالى في سورة آل عمران (آية 142)","سورة النساء - آية (11) : من قوله تعالى في سورة النساء (آية 11)","سورة آل عمران - آية (147) : من قوله تعالى في سورة آل عمران (آية 147)","سورة النساء - آية (12) : من قوله تعالى في سورة النساء (آية 12)","سورة آل عمران - آية (152) : من قوله تعالى في سورة آل عمران (آية 152)","سورة النساء - آية (13) : من قوله تعالى في سورة النساء (آية 13)","سورة آل عمران - آية (157) : من قوله تعالى في سورة آل عمران (آية 157)","سورة النساء - آية (14) : من قوله تعالى في سورة النساء (آية 14)","سورة آل عمران - آية (162) : من قوله تعالى في سورة آل عمران (آية 162)","سورة النساء - آية (15) : من قوله تعالى في سورة النساء (آية 15)","سورة آل عمران - آية (167) : من قوله تعالى في سورة آل عمران (آية 167)","سورة النساء - آية (16) : من قوله تعالى في سورة النساء (آية 16)","سورة آل عمران - آية (172) : من قوله تعالى في سورة آل عمران (آية 172)","سورة النساء - آية (17) : من قوله تعالى في سورة النساء (آية 17)","سورة آل عمران - آية (177) : من قوله تعالى في سورة آل عمران (آية 177)","سورة النساء - آية (18) : من قوله تعالى في سورة النساء (آية 18)","سورة آل عمران - آية (182) : من قوله تعالى في سورة آل عمران (آية 182)","سورة النساء - آية (19) : من قوله تعالى في سورة النساء (آية 19)","سورة آل عمران - آية (187) : من قوله تعالى في سورة آل عمران (آية 187)","سورة النساء - آية (20) : من قوله تعالى في سورة النساء (آية 20)"],["سورة النساء - آية (24) : من قوله تعالى في سورة النساء (آية 24)","سورة النساء - آية (27) : من قوله تعالى في سورة النساء (آية 27)","سورة النساء - آية (30) : من قوله تعالى في سورة النساء (آية 30)","سورة النساء - آية (33) : من قوله تعالى في سورة النساء (آية 33)","سورة النساء - آية (36) : من قوله تعالى في سورة النساء (آية 36)","سورة النساء - آية (39) : من قوله تعالى في سورة النساء (آية 39)","سورة النساء - آية (42) : من قوله تعالى في سورة النساء (آية 42)","سورة النساء - آية (45) : من قوله تعالى في سورة النساء (آية 45)","سورة النساء - آية (48) : من قوله تعالى في سورة النساء (آية 48)","سورة النساء - آية (51) : من قوله تعالى في سورة النساء (آية 51)","سورة النساء - آية (54) : من قوله تعالى في سورة النساء (آية 54)","سورة النساء - آية (57) : من قوله تعالى في سورة النساء (آية 57)","سورة النساء - آية (60) : من قوله تعالى في سورة النساء (آية 60)","سورة النساء - آية (63) : من قوله تعالى في سورة النساء (آية 63)","سورة النساء - آية (66) : من قوله تعالى في سورة النساء (آية 66)","سورة النساء - آية (69) : من قوله تعالى في سورة النساء (آية 69)","سورة النساء - آية (72) : من قوله تعالى في سورة النساء (آية 72)","سورة النساء - آية (75) : من قوله تعالى في سورة النساء (آية 75)","سورة النساء - آية (78) : من قوله تعالى في سورة النساء (آية 78)","سورة النساء - آية (81) : من قوله تعالى في سورة النساء (آية 81)","سورة النساء - آية (84) : من قوله تعالى في سورة النساء (آية 84)","سورة النساء - آية (87) : من قوله تعالى في سورة النساء (آية 87)","سورة النساء - آية (90) : من قوله تعالى في سورة النساء (آية 90)","سورة النساء - آية (93) : من قوله تعالى في سورة النساء (آية 93)","سورة النساء - آية (96) : من قوله تعالى في سورة النساء (آية 96)","سورة النساء - آية (99) : من قوله تعالى في سورة النساء (آية 99)","سورة النساء - آية (102) : من قوله تعالى في سورة النساء (آية 102)","سورة النساء - آية (105) : من قوله تعالى في سورة النساء (آية 105)","سورة النساء - آية (108) : من قوله تعالى في سورة النساء (آية 108)","سورة النساء - آية (111) : من قوله تعالى في سورة النساء (آية 111)","سورة النساء - آية (114) : من قوله تعالى في سورة النساء (آية 114)","سورة النساء - آية (117) : من قوله تعالى في سورة النساء (آية 117)","سورة النساء - آية (120) : من قوله تعالى في سورة النساء (آية 120)","سورة النساء - آية (123) : من قوله تعالى في سورة النساء (آية 123)","سورة النساء - آية (126) : من قوله تعالى في سورة النساء (آية 126)","سورة النساء - آية (129) : من قوله تعالى في سورة النساء (آية 129)","سورة النساء - آية (132) : من قوله تعالى في سورة النساء (آية 132)","سورة النساء - آية (135) : من قوله تعالى في سورة النساء (آية 135)","سورة النساء - آية (138) : من قوله تعالى في سورة النساء (آية 138)","سورة النساء - آية (141) : من قوله تعالى في سورة النساء (آية 141)"],["سورة النساء - آية (148) : من قوله تعالى في سورة النساء (آية 148)","سورة المائدة - آية (1) : من قوله تعالى في سورة المائدة (آية 1)","سورة النساء - آية (149) : من قوله تعالى في سورة النساء (آية 149)","سورة المائدة - آية (5) : من قوله تعالى في سورة المائدة (آية 5)","سورة النساء - آية (150) : من قوله تعالى في سورة النساء (آية 150)","سورة المائدة - آية (9) : من قوله تعالى في سورة المائدة (آية 9)","سورة النساء - آية (151) : من قوله تعالى في سورة النساء (آية 151)","سورة المائدة - آية (13) : من قوله تعالى في سورة المائدة (آية 13)","سورة النساء - آية (152) : من قوله تعالى في سورة النساء (آية 152)","سورة المائدة - آية (17) : من قوله تعالى في سورة المائدة (آية 17)","سورة النساء - آية (153) : من قوله تعالى في سورة النساء (آية 153)","سورة المائدة - آية (21) : من قوله تعالى في سورة المائدة (آية 21)","سورة النساء - آية (154) : من قوله تعالى في سورة النساء (آية 154)","سورة المائدة - آية (25) : من قوله تعالى في سورة المائدة (آية 25)","سورة النساء - آية (155) : من قوله تعالى في سورة النساء (آية 155)","سورة المائدة - آية (29) : من قوله تعالى في سورة المائدة (آية 29)","سورة النساء - آية (156) : من قوله تعالى في سورة النساء (آية 156)","سورة المائدة - آية (33) : من قوله تعالى في سورة المائدة (آية 33)","سورة النساء - آية (157) : من قوله تعالى في سورة النساء (آية 157)","سورة المائدة - آية (37) : من قوله تعالى في سورة المائدة (آية 37)","سورة النساء - آية (158) : من قوله تعالى في سورة النساء (آية 158)","سورة المائدة - آية (41) : من قوله تعالى في سورة المائدة (آية 41)","سورة النساء - آية (159) : من قوله تعالى في سورة النساء (آية 159)","سورة المائدة - آية (45) : من قوله تعالى في سورة المائدة (آية 45)","سورة النساء - آية (160) : من قوله تعالى في سورة النساء (آية 160)","سورة المائدة - آية (49) : من قوله تعالى في سورة المائدة (آية 49)","سورة النساء - آية (161) : من قوله تعالى في سورة النساء (آية 161)","سورة المائدة - آية (53) : من قوله تعالى في سورة المائدة (آية 53)","سورة النساء - آية (162) : من قوله تعالى في سورة النساء (آية 162)","سورة المائدة - آية (57) : من قوله تعالى في سورة المائدة (آية 57)","سورة النساء - آية (163) : من قوله تعالى في سورة النساء (آية 163)","سورة المائدة - آية (61) : من قوله تعالى في سورة المائدة (آية 61)","سورة النساء - آية (164) : من قوله تعالى في سورة النساء (آية 164)","سورة المائدة - آية (65) : من قوله تعالى في سورة المائدة (آية 65)","سورة النساء - آية (165) : من قوله تعالى في سورة النساء (آية 165)","سورة المائدة - آية (69) : من قوله تعالى في سورة المائدة (آية 69)","سورة النساء - آية (166) : من قوله تعالى في سورة النساء (آية 166)","سورة المائدة - آية (73) : من قوله تعالى في سورة المائدة (آية 73)","سورة النساء - آية (167) : من قوله تعالى في سورة النساء (آية 167)","سورة المائدة - آية (77) : من قوله تعالى في سورة المائدة (آية 77)"],["سورة المائدة - آية (82) : من قوله تعالى في سورة المائدة (آية 82)","سورة الأنعام - آية (1) : من قوله تعالى في سورة الأنعام (آية 1)","سورة المائدة - آية (83) : من قوله تعالى في سورة المائدة (آية 83)","سورة الأنعام - آية (6) : من قوله تعالى في سورة الأنعام (آية 6)","سورة المائدة - آية (84) : من قوله تعالى في سورة المائدة (آية 84)","سورة الأنعام - آية (11) : من قوله تعالى في سورة الأنعام (آية 11)","سورة المائدة - آية (85) : من قوله تعالى في سورة المائدة (آية 85)","سورة الأنعام - آية (16) : من قوله تعالى في سورة الأنعام (آية 16)","سورة المائدة - آية (86) : من قوله تعالى في سورة المائدة (آية 86)","سورة الأنعام - آية (21) : من قوله تعالى في سورة الأنعام (آية 21)","سورة المائدة - آية (87) : من قوله تعالى في سورة المائدة (آية 87)","سورة الأنعام - آية (26) : من قوله تعالى في سورة الأنعام (آية 26)","سورة المائدة - آية (88) : من قوله تعالى في سورة المائدة (آية 88)","سورة الأنعام - آية (31) : من قوله تعالى في سورة الأنعام (آية 31)","سورة المائدة - آية (89) : من قوله تعالى في سورة المائدة (آية 89)","سورة الأنعام - آية (36) : من قوله تعالى في سورة الأنعام (آية 36)","سورة المائدة - آية (90) : من قوله تعالى في سورة المائدة (آية 90)","سورة الأنعام - آية (41) : من قوله تعالى في سورة الأنعام (آية 41)","سورة المائدة - آية (91) : من قوله تعالى في سورة المائدة (آية 91)","سورة الأنعام - آية (46) : من قوله تعالى في سورة الأنعام (آية 46)","سورة المائدة - آية (92) : من قوله تعالى في سورة المائدة (آية 92)","سورة الأنعام - آية (51) : من قوله تعالى في سورة الأنعام (آية 51)","سورة المائدة - آية (93) : من قوله تعالى في سورة المائدة (آية 93)","سورة الأنعام - آية (56) : من قوله تعالى في سورة الأنعام (آية 56)","سورة المائدة - آية (94) : من قوله تعالى في سورة المائدة (آية 94)","سورة الأنعام - آية (61) : من قوله تعالى في سورة الأنعام (آية 61)","سورة المائدة - آية (95) : من قوله تعالى في سورة المائدة (آية 95)","سورة الأنعام - آية (66) : من قوله تعالى في سورة الأنعام (آية 66)","سورة المائدة - آية (96) : من قوله تعالى في سورة المائدة (آية 96)","سورة الأنعام - آية (71) : من قوله تعالى في سورة الأنعام (آية 71)","سورة المائدة - آية (97) : من قوله تعالى في سورة المائدة (آية 97)","سورة الأنعام - آية (76) : من قوله تعالى في سورة الأنعام (آية 76)","سورة المائدة - آية (98) : من قوله تعالى في سورة المائدة (آية 98)","سورة الأنعام - آية (81) : من قوله تعالى في سورة الأنعام (آية 81)","سورة المائدة - آية (99) : من قوله تعالى في سورة المائدة (آية 99)","سورة الأنعام - آية (86) : من قوله تعالى في سورة الأنعام (آية 86)","سورة المائدة - آية (100) : من قوله تعالى في سورة المائدة (آية 100)","سورة الأنعام - آية (91) : من قوله تعالى في سورة الأنعام (آية 91)","سورة المائدة - آية (101) : من قوله تعالى في سورة المائدة (آية 101)","سورة الأنعام - آية (96) : من قوله تعالى في سورة الأنعام (آية 96)"],["سورة الأنعام - آية (111) : من قوله تعالى في سورة الأنعام (آية 111)","سورة الأعراف - آية (1) : من قوله تعالى في سورة الأعراف (آية 1)","سورة الأنعام - آية (113) : من قوله تعالى في سورة الأنعام (آية 113)","سورة الأعراف - آية (5) : من قوله تعالى في سورة الأعراف (آية 5)","سورة الأنعام - آية (115) : من قوله تعالى في سورة الأنعام (آية 115)","سورة الأعراف - آية (9) : من قوله تعالى في سورة الأعراف (آية 9)","سورة الأنعام - آية (117) : من قوله تعالى في سورة الأنعام (آية 117)","سورة الأعراف - آية (13) : من قوله تعالى في سورة الأعراف (آية 13)","سورة الأنعام - آية (119) : من قوله تعالى في سورة الأنعام (آية 119)","سورة الأعراف - آية (17) : من قوله تعالى في سورة الأعراف (آية 17)","سورة الأنعام - آية (121) : من قوله تعالى في سورة الأنعام (آية 121)","سورة الأعراف - آية (21) : من قوله تعالى في سورة الأعراف (آية 21)","سورة الأنعام - آية (123) : من قوله تعالى في سورة الأنعام (آية 123)","سورة الأعراف - آية (25) : من قوله تعالى في سورة الأعراف (آية 25)","سورة الأنعام - آية (125) : من قوله تعالى في سورة الأنعام (آية 125)","سورة الأعراف - آية (29) : من قوله تعالى في سورة الأعراف (آية 29)","سورة الأنعام - آية (127) : من قوله تعالى في سورة الأنعام (آية 127)","سورة الأعراف - آية (33) : من قوله تعالى في سورة الأعراف (آية 33)","سورة الأنعام - آية (129) : من قوله تعالى في سورة الأنعام (آية 129)","سورة الأعراف - آية (37) : من قوله تعالى في سورة الأعراف (آية 37)","سورة الأنعام - آية (131) : من قوله تعالى في سورة الأنعام (آية 131)","سورة الأعراف - آية (41) : من قوله تعالى في سورة الأعراف (آية 41)","سورة الأنعام - آية (133) : من قوله تعالى في سورة الأنعام (آية 133)","سورة الأعراف - آية (45) : من قوله تعالى في سورة الأعراف (آية 45)","سورة الأنعام - آية (135) : من قوله تعالى في سورة الأنعام (آية 135)","سورة الأعراف - آية (49) : من قوله تعالى في سورة الأعراف (آية 49)","سورة الأنعام - آية (137) : من قوله تعالى في سورة الأنعام (آية 137)","سورة الأعراف - آية (53) : من قوله تعالى في سورة الأعراف (آية 53)","سورة الأنعام - آية (139) : من قوله تعالى في سورة الأنعام (آية 139)","سورة الأعراف - آية (57) : من قوله تعالى في سورة الأعراف (آية 57)","سورة الأنعام - آية (141) : من قوله تعالى في سورة الأنعام (آية 141)","سورة الأعراف - آية (61) : من قوله تعالى في سورة الأعراف (آية 61)","سورة الأنعام - آية (143) : من قوله تعالى في سورة الأنعام (آية 143)","سورة الأعراف - آية (65) : من قوله تعالى في سورة الأعراف (آية 65)","سورة الأنعام - آية (145) : من قوله تعالى في سورة الأنعام (آية 145)","سورة الأعراف - آية (69) : من قوله تعالى في سورة الأعراف (آية 69)","سورة الأنعام - آية (147) : من قوله تعالى في سورة الأنعام (آية 147)","سورة الأعراف - آية (73) : من قوله تعالى في سورة الأعراف (آية 73)","سورة الأنعام - آية (149) : من قوله تعالى في سورة الأنعام (آية 149)","سورة الأعراف - آية (77) : من قوله تعالى في سورة الأعراف (آية 77)"],["سورة الأعراف - آية (88) : من قوله تعالى في سورة الأعراف (آية 88)","سورة الأنفال - آية (1) : من قوله تعالى في سورة الأنفال (آية 1)","سورة الأعراف - آية (93) : من قوله تعالى في سورة الأعراف (آية 93)","سورة الأنفال - آية (2) : من قوله تعالى في سورة الأنفال (آية 2)","سورة الأعراف - آية (98) : من قوله تعالى في سورة الأعراف (آية 98)","سورة الأنفال - آية (3) : من قوله تعالى في سورة الأنفال (آية 3)","سورة الأعراف - آية (103) : من قوله تعالى في سورة الأعراف (آية 103)","سورة الأنفال - آية (4) : من قوله تعالى في سورة الأنفال (آية 4)","سورة الأعراف - آية (108) : من قوله تعالى في سورة الأعراف (آية 108)","سورة الأنفال - آية (5) : من قوله تعالى في سورة الأنفال (آية 5)","سورة الأعراف - آية (113) : من قوله تعالى في سورة الأعراف (آية 113)","سورة الأنفال - آية (6) : من قوله تعالى في سورة الأنفال (آية 6)","سورة الأعراف - آية (118) : من قوله تعالى في سورة الأعراف (آية 118)","سورة الأنفال - آية (7) : من قوله تعالى في سورة الأنفال (آية 7)","سورة الأعراف - آية (123) : من قوله تعالى في سورة الأعراف (آية 123)","سورة الأنفال - آية (8) : من قوله تعالى في سورة الأنفال (آية 8)","سورة الأعراف - آية (128) : من قوله تعالى في سورة الأعراف (آية 128)","سورة الأنفال - آية (9) : من قوله تعالى في سورة الأنفال (آية 9)","سورة الأعراف - آية (133) : من قوله تعالى في سورة الأعراف (آية 133)","سورة الأنفال - آية (10) : من قوله تعالى في سورة الأنفال (آية 10)","سورة الأعراف - آية (138) : من قوله تعالى في سورة الأعراف (آية 138)","سورة الأنفال - آية (11) : من قوله تعالى في سورة الأنفال (آية 11)","سورة الأعراف - آية (143) : من قوله تعالى في سورة الأعراف (آية 143)","سورة الأنفال - آية (12) : من قوله تعالى في سورة الأنفال (آية 12)","سورة الأعراف - آية (148) : من قوله تعالى في سورة الأعراف (آية 148)","سورة الأنفال - آية (13) : من قوله تعالى في سورة الأنفال (آية 13)","سورة الأعراف - آية (153) : من قوله تعالى في سورة الأعراف (آية 153)","سورة الأنفال - آية (14) : من قوله تعالى في سورة الأنفال (آية 14)","سورة الأعراف - آية (158) : من قوله تعالى في سورة الأعراف (آية 158)","سورة الأنفال - آية (15) : من قوله تعالى في سورة الأنفال (آية 15)","سورة الأعراف - آية (163) : من قوله تعالى في سورة الأعراف (آية 163)","سورة الأنفال - آية (16) : من قوله تعالى في سورة الأنفال (آية 16)","سورة الأعراف - آية (168) : من قوله تعالى في سورة الأعراف (آية 168)","سورة الأنفال - آية (17) : من قوله تعالى في سورة الأنفال (آية 17)","سورة الأعراف - آية (173) : من قوله تعالى في سورة الأعراف (آية 173)","سورة الأنفال - آية (18) : من قوله تعالى في سورة الأنفال (آية 18)","سورة الأعراف - آية (178) : من قوله تعالى في سورة الأعراف (آية 178)","سورة الأنفال - آية (19) : من قوله تعالى في سورة الأنفال (آية 19)","سورة الأعراف - آية (183) : من قوله تعالى في سورة الأعراف (آية 183)","سورة الأنفال - آية (20) : من قوله تعالى في سورة الأنفال (آية 20)"],["سورة الأنفال - آية (41) : من قوله تعالى في سورة الأنفال (آية 41)","سورة التوبة - آية (1) : من قوله تعالى في سورة التوبة (آية 1)","سورة الأنفال - آية (42) : من قوله تعالى في سورة الأنفال (آية 42)","سورة التوبة - آية (5) : من قوله تعالى في سورة التوبة (آية 5)","سورة الأنفال - آية (43) : من قوله تعالى في سورة الأنفال (آية 43)","سورة التوبة - آية (9) : من قوله تعالى في سورة التوبة (آية 9)","سورة الأنفال - آية (44) : من قوله تعالى في سورة الأنفال (آية 44)","سورة التوبة - آية (13) : من قوله تعالى في سورة التوبة (آية 13)","سورة الأنفال - آية (45) : من قوله تعالى في سورة الأنفال (آية 45)","سورة التوبة - آية (17) : من قوله تعالى في سورة التوبة (آية 17)","سورة الأنفال - آية (46) : من قوله تعالى في سورة الأنفال (آية 46)","سورة التوبة - آية (21) : من قوله تعالى في سورة التوبة (آية 21)","سورة الأنفال - آية (47) : من قوله تعالى في سورة الأنفال (آية 47)","سورة التوبة - آية (25) : من قوله تعالى في سورة التوبة (آية 25)","سورة الأنفال - آية (48) : من قوله تعالى في سورة الأنفال (آية 48)","سورة التوبة - آية (29) : من قوله تعالى في سورة التوبة (آية 29)","سورة الأنفال - آية (49) : من قوله تعالى في سورة الأنفال (آية 49)","سورة التوبة - آية (33) : من قوله تعالى في سورة التوبة (آية 33)","سورة الأنفال - آية (50) : من قوله تعالى في سورة الأنفال (آية 50)","سورة التوبة - آية (37) : من قوله تعالى في سورة التوبة (آية 37)","سورة الأنفال - آية (51) : من قوله تعالى في سورة الأنفال (آية 51)","سورة التوبة - آية (41) : من قوله تعالى في سورة التوبة (آية 41)","سورة الأنفال - آية (52) : من قوله تعالى في سورة الأنفال (آية 52)","سورة التوبة - آية (45) : من قوله تعالى في سورة التوبة (آية 45)","سورة الأنفال - آية (53) : من قوله تعالى في سورة الأنفال (آية 53)","سورة التوبة - آية (49) : من قوله تعالى في سورة التوبة (آية 49)","سورة الأنفال - آية (54) : من قوله تعالى في سورة الأنفال (آية 54)","سورة التوبة - آية (53) : من قوله تعالى في سورة التوبة (آية 53)","سورة الأنفال - آية (55) : من قوله تعالى في سورة الأنفال (آية 55)","سورة التوبة - آية (57) : من قوله تعالى في سورة التوبة (آية 57)","سورة الأنفال - آية (56) : من قوله تعالى في سورة الأنفال (آية 56)","سورة التوبة - آية (61) : من قوله تعالى في سورة التوبة (آية 61)","سورة الأنفال - آية (57) : من قوله تعالى في سورة الأنفال (آية 57)","سورة التوبة - آية (65) : من قوله تعالى في سورة التوبة (آية 65)","سورة الأنفال - آية (58) : من قوله تعالى في سورة الأنفال (آية 58)","سورة التوبة - آية (69) : من قوله تعالى في سورة التوبة (آية 69)","سورة الأنفال - آية (59) : من قوله تعالى في سورة الأنفال (آية 59)","سورة التوبة - آية (73) : من قوله تعالى في سورة التوبة (آية 73)","سورة الأنفال - آية (60) : من قوله تعالى في سورة الأنفال (آية 60)","سورة التوبة - آية (77) : من قوله تعالى في سورة التوبة (آية 77)"],["سورة التوبة - آية (93) : من قوله تعالى في سورة التوبة (آية 93)","سورة يونس - آية (1) : من قوله تعالى في سورة يونس (آية 1)","سورة هود - آية (1) : من قوله تعالى في سورة هود (آية 1)","سورة التوبة - آية (95) : من قوله تعالى في سورة التوبة (آية 95)","سورة يونس - آية (9) : من قوله تعالى في سورة يونس (آية 9)","سورة هود - آية (2) : من قوله تعالى في سورة هود (آية 2)","سورة التوبة - آية (97) : من قوله تعالى في سورة التوبة (آية 97)","سورة يونس - آية (17) : من قوله تعالى في سورة يونس (آية 17)","سورة هود - آية (3) : من قوله تعالى في سورة هود (آية 3)","سورة التوبة - آية (99) : من قوله تعالى في سورة التوبة (آية 99)","سورة يونس - آية (25) : من قوله تعالى في سورة يونس (آية 25)","سورة هود - آية (4) : من قوله تعالى في سورة هود (آية 4)","سورة التوبة - آية (101) : من قوله تعالى في سورة التوبة (آية 101)","سورة يونس - آية (33) : من قوله تعالى في سورة يونس (آية 33)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (103) : من قوله تعالى في سورة التوبة (آية 103)","سورة يونس - آية (41) : من قوله تعالى في سورة يونس (آية 41)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (105) : من قوله تعالى في سورة التوبة (آية 105)","سورة يونس - آية (49) : من قوله تعالى في سورة يونس (آية 49)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (107) : من قوله تعالى في سورة التوبة (آية 107)","سورة يونس - آية (57) : من قوله تعالى في سورة يونس (آية 57)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (109) : من قوله تعالى في سورة التوبة (آية 109)","سورة يونس - آية (65) : من قوله تعالى في سورة يونس (آية 65)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (111) : من قوله تعالى في سورة التوبة (آية 111)","سورة يونس - آية (73) : من قوله تعالى في سورة يونس (آية 73)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (113) : من قوله تعالى في سورة التوبة (آية 113)","سورة يونس - آية (81) : من قوله تعالى في سورة يونس (آية 81)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (115) : من قوله تعالى في سورة التوبة (آية 115)","سورة يونس - آية (89) : من قوله تعالى في سورة يونس (آية 89)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (117) : من قوله تعالى في سورة التوبة (آية 117)","سورة يونس - آية (97) : من قوله تعالى في سورة يونس (آية 97)","سورة هود - آية (5) : من قوله تعالى في سورة هود (آية 5)","سورة التوبة - آية (119) : من قوله تعالى في سورة التوبة (آية 119)"],["سورة هود - آية (6) : من قوله تعالى في سورة هود (آية 6)","سورة يوسف - آية (1) : من قوله تعالى في سورة يوسف (آية 1)","سورة هود - آية (11) : من قوله تعالى في سورة هود (آية 11)","سورة يوسف - آية (3) : من قوله تعالى في سورة يوسف (آية 3)","سورة هود - آية (16) : من قوله تعالى في سورة هود (آية 16)","سورة يوسف - آية (5) : من قوله تعالى في سورة يوسف (آية 5)","سورة هود - آية (21) : من قوله تعالى في سورة هود (آية 21)","سورة يوسف - آية (7) : من قوله تعالى في سورة يوسف (آية 7)","سورة هود - آية (26) : من قوله تعالى في سورة هود (آية 26)","سورة يوسف - آية (9) : من قوله تعالى في سورة يوسف (آية 9)","سورة هود - آية (31) : من قوله تعالى في سورة هود (آية 31)","سورة يوسف - آية (11) : من قوله تعالى في سورة يوسف (آية 11)","سورة هود - آية (36) : من قوله تعالى في سورة هود (آية 36)","سورة يوسف - آية (13) : من قوله تعالى في سورة يوسف (آية 13)","سورة هود - آية (41) : من قوله تعالى في سورة هود (آية 41)","سورة يوسف - آية (15) : من قوله تعالى في سورة يوسف (آية 15)","سورة هود - آية (46) : من قوله تعالى في سورة هود (آية 46)","سورة يوسف - آية (17) : من قوله تعالى في سورة يوسف (آية 17)","سورة هود - آية (51) : من قوله تعالى في سورة هود (آية 51)","سورة يوسف - آية (19) : من قوله تعالى في سورة يوسف (آية 19)","سورة هود - آية (56) : من قوله تعالى في سورة هود (آية 56)","سورة يوسف - آية (21) : من قوله تعالى في سورة يوسف (آية 21)","سورة هود - آية (61) : من قوله تعالى في سورة هود (آية 61)","سورة يوسف - آية (23) : من قوله تعالى في سورة يوسف (آية 23)","سورة هود - آية (66) : من قوله تعالى في سورة هود (آية 66)","سورة يوسف - آية (25) : من قوله تعالى في سورة يوسف (آية 25)","سورة هود - آية (71) : من قوله تعالى في سورة هود (آية 71)","سورة يوسف - آية (27) : من قوله تعالى في سورة يوسف (آية 27)","سورة هود - آية (76) : من قوله تعالى في سورة هود (آية 76)","سورة يوسف - آية (29) : من قوله تعالى في سورة يوسف (آية 29)","سورة هود - آية (81) : من قوله تعالى في سورة هود (آية 81)","سورة يوسف - آية (31) : من قوله تعالى في سورة يوسف (آية 31)","سورة هود - آية (86) : من قوله تعالى في سورة هود (آية 86)","سورة يوسف - آية (33) : من قوله تعالى في سورة يوسف (آية 33)","سورة هود - آية (91) : من قوله تعالى في سورة هود (آية 91)","سورة يوسف - آية (35) : من قوله تعالى في سورة يوسف (آية 35)","سورة هود - آية (96) : من قوله تعالى في سورة هود (آية 96)","سورة يوسف - آية (37) : من قوله تعالى في سورة يوسف (آية 37)","سورة هود - آية (101) : من قوله تعالى في سورة هود (آية 101)","سورة يوسف - آية (39) : من قوله تعالى في سورة يوسف (آية 39)"],["سورة يوسف - آية (53) : من قوله تعالى في سورة يوسف (آية 53)","سورة الرعد - آية (1) : من قوله تعالى في سورة الرعد (آية 1)","سورة إبراهيم - آية (1) : من قوله تعالى في سورة إبراهيم (آية 1)","سورة يوسف - آية (57) : من قوله تعالى في سورة يوسف (آية 57)","سورة الرعد - آية (4) : من قوله تعالى في سورة الرعد (آية 4)","سورة إبراهيم - آية (4) : من قوله تعالى في سورة إبراهيم (آية 4)","سورة يوسف - آية (61) : من قوله تعالى في سورة يوسف (آية 61)","سورة الرعد - آية (7) : من قوله تعالى في سورة الرعد (آية 7)","سورة إبراهيم - آية (7) : من قوله تعالى في سورة إبراهيم (آية 7)","سورة يوسف - آية (65) : من قوله تعالى في سورة يوسف (آية 65)","سورة الرعد - آية (10) : من قوله تعالى في سورة الرعد (آية 10)","سورة إبراهيم - آية (10) : من قوله تعالى في سورة إبراهيم (آية 10)","سورة يوسف - آية (69) : من قوله تعالى في سورة يوسف (آية 69)","سورة الرعد - آية (13) : من قوله تعالى في سورة الرعد (آية 13)","سورة إبراهيم - آية (13) : من قوله تعالى في سورة إبراهيم (آية 13)","سورة يوسف - آية (73) : من قوله تعالى في سورة يوسف (آية 73)","سورة الرعد - آية (16) : من قوله تعالى في سورة الرعد (آية 16)","سورة إبراهيم - آية (16) : من قوله تعالى في سورة إبراهيم (آية 16)","سورة يوسف - آية (77) : من قوله تعالى في سورة يوسف (آية 77)","سورة الرعد - آية (19) : من قوله تعالى في سورة الرعد (آية 19)","سورة إبراهيم - آية (19) : من قوله تعالى في سورة إبراهيم (آية 19)","سورة يوسف - آية (81) : من قوله تعالى في سورة يوسف (آية 81)","سورة الرعد - آية (22) : من قوله تعالى في سورة الرعد (آية 22)","سورة إبراهيم - آية (22) : من قوله تعالى في سورة إبراهيم (آية 22)","سورة يوسف - آية (85) : من قوله تعالى في سورة يوسف (آية 85)","سورة الرعد - آية (25) : من قوله تعالى في سورة الرعد (آية 25)","سورة إبراهيم - آية (25) : من قوله تعالى في سورة إبراهيم (آية 25)","سورة يوسف - آية (89) : من قوله تعالى في سورة يوسف (آية 89)","سورة الرعد - آية (28) : من قوله تعالى في سورة الرعد (آية 28)","سورة إبراهيم - آية (28) : من قوله تعالى في سورة إبراهيم (آية 28)","سورة يوسف - آية (93) : من قوله تعالى في سورة يوسف (آية 93)","سورة الرعد - آية (31) : من قوله تعالى في سورة الرعد (آية 31)","سورة إبراهيم - آية (31) : من قوله تعالى في سورة إبراهيم (آية 31)","سورة يوسف - آية (97) : من قوله تعالى في سورة يوسف (آية 97)","سورة الرعد - آية (34) : من قوله تعالى في سورة الرعد (آية 34)","سورة إبراهيم - آية (34) : من قوله تعالى في سورة إبراهيم (آية 34)","سورة يوسف - آية (101) : من قوله تعالى في سورة يوسف (آية 101)","سورة الرعد - آية (37) : من قوله تعالى في سورة الرعد (آية 37)","سورة إبراهيم - آية (37) : من قوله تعالى في سورة إبراهيم (آية 37)","سورة يوسف - آية (105) : من قوله تعالى في سورة يوسف (آية 105)"],["سورة الحجر - آية (1) : من قوله تعالى في سورة الحجر (آية 1)","سورة النحل - آية (1) : من قوله تعالى في سورة النحل (آية 1)","سورة الحجر - آية (5) : من قوله تعالى في سورة الحجر (آية 5)","سورة النحل - آية (7) : من قوله تعالى في سورة النحل (آية 7)","سورة الحجر - آية (9) : من قوله تعالى في سورة الحجر (آية 9)","سورة النحل - آية (13) : من قوله تعالى في سورة النحل (آية 13)","سورة الحجر - آية (13) : من قوله تعالى في سورة الحجر (آية 13)","سورة النحل - آية (19) : من قوله تعالى في سورة النحل (آية 19)","سورة الحجر - آية (17) : من قوله تعالى في سورة الحجر (آية 17)","سورة النحل - آية (25) : من قوله تعالى في سورة النحل (آية 25)","سورة الحجر - آية (21) : من قوله تعالى في سورة الحجر (آية 21)","سورة النحل - آية (31) : من قوله تعالى في سورة النحل (آية 31)","سورة الحجر - آية (25) : من قوله تعالى في سورة الحجر (آية 25)","سورة النحل - آية (37) : من قوله تعالى في سورة النحل (آية 37)","سورة الحجر - آية (29) : من قوله تعالى في سورة الحجر (آية 29)","سورة النحل - آية (43) : من قوله تعالى في سورة النحل (آية 43)","سورة الحجر - آية (33) : من قوله تعالى في سورة الحجر (آية 33)","سورة النحل - آية (49) : من قوله تعالى في سورة النحل (آية 49)","سورة الحجر - آية (37) : من قوله تعالى في سورة الحجر (آية 37)","سورة النحل - آية (55) : من قوله تعالى في سورة النحل (آية 55)","سورة الحجر - آية (41) : من قوله تعالى في سورة الحجر (آية 41)","سورة النحل - آية (61) : من قوله تعالى في سورة النحل (آية 61)","سورة الحجر - آية (45) : من قوله تعالى في سورة الحجر (آية 45)","سورة النحل - آية (67) : من قوله تعالى في سورة النحل (آية 67)","سورة الحجر - آية (49) : من قوله تعالى في سورة الحجر (آية 49)","سورة النحل - آية (73) : من قوله تعالى في سورة النحل (آية 73)","سورة الحجر - آية (53) : من قوله تعالى في سورة الحجر (آية 53)","سورة النحل - آية (79) : من قوله تعالى في سورة النحل (آية 79)","سورة الحجر - آية (57) : من قوله تعالى في سورة الحجر (آية 57)","سورة النحل - آية (85) : من قوله تعالى في سورة النحل (آية 85)","سورة الحجر - آية (61) : من قوله تعالى في سورة الحجر (آية 61)","سورة النحل - آية (91) : من قوله تعالى في سورة النحل (آية 91)","سورة الحجر - آية (65) : من قوله تعالى في سورة الحجر (آية 65)","سورة النحل - آية (97) : من قوله تعالى في سورة النحل (آية 97)","سورة الحجر - آية (69) : من قوله تعالى في سورة الحجر (آية 69)","سورة النحل - آية (103) : من قوله تعالى في سورة النحل (آية 103)","سورة الحجر - آية (73) : من قوله تعالى في سورة الحجر (آية 73)","سورة النحل - آية (109) : من قوله تعالى في سورة النحل (آية 109)","سورة الحجر - آية (77) : من قوله تعالى في سورة الحجر (آية 77)","سورة النحل - آية (115) : من قوله تعالى في سورة النحل (آية 115)"],["سورة الإسراء - آية (1) : من قوله تعالى في سورة الإسراء (آية 1)","سورة الكهف - آية (1) : من قوله تعالى في سورة الكهف (آية 1)","سورة الإسراء - آية (6) : من قوله تعالى في سورة الإسراء (آية 6)","سورة الكهف - آية (4) : من قوله تعالى في سورة الكهف (آية 4)","سورة الإسراء - آية (11) : من قوله تعالى في سورة الإسراء (آية 11)","سورة الكهف - آية (7) : من قوله تعالى في سورة الكهف (آية 7)","سورة الإسراء - آية (16) : من قوله تعالى في سورة الإسراء (آية 16)","سورة الكهف - آية (10) : من قوله تعالى في سورة الكهف (آية 10)","سورة الإسراء - آية (21) : من قوله تعالى في سورة الإسراء (آية 21)","سورة الكهف - آية (13) : من قوله تعالى في سورة الكهف (آية 13)","سورة الإسراء - آية (26) : من قوله تعالى في سورة الإسراء (آية 26)","سورة الكهف - آية (16) : من قوله تعالى في سورة الكهف (آية 16)","سورة الإسراء - آية (31) : من قوله تعالى في سورة الإسراء (آية 31)","سورة الكهف - آية (19) : من قوله تعالى في سورة الكهف (آية 19)","سورة الإسراء - آية (36) : من قوله تعالى في سورة الإسراء (آية 36)","سورة الكهف - آية (22) : من قوله تعالى في سورة الكهف (آية 22)","سورة الإسراء - آية (41) : من قوله تعالى في سورة الإسراء (آية 41)","سورة الكهف - آية (25) : من قوله تعالى في سورة الكهف (آية 25)","سورة الإسراء - آية (46) : من قوله تعالى في سورة الإسراء (آية 46)","سورة الكهف - آية (28) : من قوله تعالى في سورة الكهف (آية 28)","سورة الإسراء - آية (51) : من قوله تعالى في سورة الإسراء (آية 51)","سورة الكهف - آية (31) : من قوله تعالى في سورة الكهف (آية 31)","سورة الإسراء - آية (56) : من قوله تعالى في سورة الإسراء (آية 56)","سورة الكهف - آية (34) : من قوله تعالى في سورة الكهف (آية 34)","سورة الإسراء - آية (61) : من قوله تعالى في سورة الإسراء (آية 61)","سورة الكهف - آية (37) : من قوله تعالى في سورة الكهف (آية 37)","سورة الإسراء - آية (66) : من قوله تعالى في سورة الإسراء (آية 66)","سورة الكهف - آية (40) : من قوله تعالى في سورة الكهف (آية 40)","سورة الإسراء - آية (71) : من قوله تعالى في سورة الإسراء (آية 71)","سورة الكهف - آية (43) : من قوله تعالى في سورة الكهف (آية 43)","سورة الإسراء - آية (76) : من قوله تعالى في سورة الإسراء (آية 76)","سورة الكهف - آية (46) : من قوله تعالى في سورة الكهف (آية 46)","سورة الإسراء - آية (81) : من قوله تعالى في سورة الإسراء (آية 81)","سورة الكهف - آية (49) : من قوله تعالى في سورة الكهف (آية 49)","سورة الإسراء - آية (86) : من قوله تعالى في سورة الإسراء (آية 86)","سورة الكهف - آية (52) : من قوله تعالى في سورة الكهف (آية 52)","سورة الإسراء - آية (91) : من قوله تعالى في سورة الإسراء (آية 91)","سورة الكهف - آية (55) : من قوله تعالى في سورة الكهف (آية 55)","سورة الإسراء - آية (96) : من قوله تعالى في سورة الإسراء (آية 96)","سورة الكهف - آية (58) : من قوله تعالى في سورة الكهف (آية 58)"],["سورة الكهف - آية (75) : من قوله تعالى في سورة الكهف (آية 75)","سورة مريم - آية (1) : من قوله تعالى في سورة مريم (آية 1)","سورة طه - آية (1) : من قوله تعالى في سورة طه (آية 1)","سورة الكهف - آية (77) : من قوله تعالى في سورة الكهف (آية 77)","سورة مريم - آية (8) : من قوله تعالى في سورة مريم (آية 8)","سورة طه - آية (11) : من قوله تعالى في سورة طه (آية 11)","سورة الكهف - آية (79) : من قوله تعالى في سورة الكهف (آية 79)","سورة مريم - آية (15) : من قوله تعالى في سورة مريم (آية 15)","سورة طه - آية (21) : من قوله تعالى في سورة طه (آية 21)","سورة الكهف - آية (81) : من قوله تعالى في سورة الكهف (آية 81)","سورة مريم - آية (22) : من قوله تعالى في سورة مريم (آية 22)","سورة طه - آية (31) : من قوله تعالى في سورة طه (آية 31)","سورة الكهف - آية (83) : من قوله تعالى في سورة الكهف (آية 83)","سورة مريم - آية (29) : من قوله تعالى في سورة مريم (آية 29)","سورة طه - آية (41) : من قوله تعالى في سورة طه (آية 41)","سورة الكهف - آية (85) : من قوله تعالى في سورة الكهف (آية 85)","سورة مريم - آية (36) : من قوله تعالى في سورة مريم (آية 36)","سورة طه - آية (51) : من قوله تعالى في سورة طه (آية 51)","سورة الكهف - آية (87) : من قوله تعالى في سورة الكهف (آية 87)","سورة مريم - آية (43) : من قوله تعالى في سورة مريم (آية 43)","سورة طه - آية (61) : من قوله تعالى في سورة طه (آية 61)","سورة الكهف - آية (89) : من قوله تعالى في سورة الكهف (آية 89)","سورة مريم - آية (50) : من قوله تعالى في سورة مريم (آية 50)","سورة طه - آية (71) : من قوله تعالى في سورة طه (آية 71)","سورة الكهف - آية (91) : من قوله تعالى في سورة الكهف (آية 91)","سورة مريم - آية (57) : من قوله تعالى في سورة مريم (آية 57)","سورة طه - آية (81) : من قوله تعالى في سورة طه (آية 81)","سورة الكهف - آية (93) : من قوله تعالى في سورة الكهف (آية 93)","سورة مريم - آية (64) : من قوله تعالى في سورة مريم (آية 64)","سورة طه - آية (91) : من قوله تعالى في سورة طه (آية 91)","سورة الكهف - آية (95) : من قوله تعالى في سورة الكهف (آية 95)","سورة مريم - آية (71) : من قوله تعالى في سورة مريم (آية 71)","سورة طه - آية (101) : من قوله تعالى في سورة طه (آية 101)","سورة الكهف - آية (97) : من قوله تعالى في سورة الكهف (آية 97)","سورة مريم - آية (78) : من قوله تعالى في سورة مريم (آية 78)","سورة طه - آية (111) : من قوله تعالى في سورة طه (آية 111)","سورة الكهف - آية (99) : من قوله تعالى في سورة الكهف (آية 99)","سورة مريم - آية (85) : من قوله تعالى في سورة مريم (آية 85)","سورة طه - آية (121) : من قوله تعالى في سورة طه (آية 121)","سورة الكهف - آية (101) : من قوله تعالى في سورة الكهف (آية 101)"],["سورة الأنبيـاء - آية (1) : من قوله تعالى في سورة الأنبيـاء (آية 1)","سورة الحج - آية (1) : من قوله تعالى في سورة الحج (آية 1)","سورة الأنبيـاء - آية (6) : من قوله تعالى في سورة الأنبيـاء (آية 6)","سورة الحج - آية (4) : من قوله تعالى في سورة الحج (آية 4)","سورة الأنبيـاء - آية (11) : من قوله تعالى في سورة الأنبيـاء (آية 11)","سورة الحج - آية (7) : من قوله تعالى في سورة الحج (آية 7)","سورة الأنبيـاء - آية (16) : من قوله تعالى في سورة الأنبيـاء (آية 16)","سورة الحج - آية (10) : من قوله تعالى في سورة الحج (آية 10)","سورة الأنبيـاء - آية (21) : من قوله تعالى في سورة الأنبيـاء (آية 21)","سورة الحج - آية (13) : من قوله تعالى في سورة الحج (آية 13)","سورة الأنبيـاء - آية (26) : من قوله تعالى في سورة الأنبيـاء (آية 26)","سورة الحج - آية (16) : من قوله تعالى في سورة الحج (آية 16)","سورة الأنبيـاء - آية (31) : من قوله تعالى في سورة الأنبيـاء (آية 31)","سورة الحج - آية (19) : من قوله تعالى في سورة الحج (آية 19)","سورة الأنبيـاء - آية (36) : من قوله تعالى في سورة الأنبيـاء (آية 36)","سورة الحج - آية (22) : من قوله تعالى في سورة الحج (آية 22)","سورة الأنبيـاء - آية (41) : من قوله تعالى في سورة الأنبيـاء (آية 41)","سورة الحج - آية (25) : من قوله تعالى في سورة الحج (آية 25)","سورة الأنبيـاء - آية (46) : من قوله تعالى في سورة الأنبيـاء (آية 46)","سورة الحج - آية (28) : من قوله تعالى في سورة الحج (آية 28)","سورة الأنبيـاء - آية (51) : من قوله تعالى في سورة الأنبيـاء (آية 51)","سورة الحج - آية (31) : من قوله تعالى في سورة الحج (آية 31)","سورة الأنبيـاء - آية (56) : من قوله تعالى في سورة الأنبيـاء (آية 56)","سورة الحج - آية (34) : من قوله تعالى في سورة الحج (آية 34)","سورة الأنبيـاء - آية (61) : من قوله تعالى في سورة الأنبيـاء (آية 61)","سورة الحج - آية (37) : من قوله تعالى في سورة الحج (آية 37)","سورة الأنبيـاء - آية (66) : من قوله تعالى في سورة الأنبيـاء (آية 66)","سورة الحج - آية (40) : من قوله تعالى في سورة الحج (آية 40)","سورة الأنبيـاء - آية (71) : من قوله تعالى في سورة الأنبيـاء (آية 71)","سورة الحج - آية (43) : من قوله تعالى في سورة الحج (آية 43)","سورة الأنبيـاء - آية (76) : من قوله تعالى في سورة الأنبيـاء (آية 76)","سورة الحج - آية (46) : من قوله تعالى في سورة الحج (آية 46)","سورة الأنبيـاء - آية (81) : من قوله تعالى في سورة الأنبيـاء (آية 81)","سورة الحج - آية (49) : من قوله تعالى في سورة الحج (آية 49)","سورة الأنبيـاء - آية (86) : من قوله تعالى في سورة الأنبيـاء (آية 86)","سورة الحج - آية (52) : من قوله تعالى في سورة الحج (آية 52)","سورة الأنبيـاء - آية (91) : من قوله تعالى في سورة الأنبيـاء (آية 91)","سورة الحج - آية (55) : من قوله تعالى في سورة الحج (آية 55)","سورة الأنبيـاء - آية (96) : من قوله تعالى في سورة الأنبيـاء (آية 96)","سورة الحج - آية (58) : من قوله تعالى في سورة الحج (آية 58)"],["سورة المؤمنون - آية (1) : من قوله تعالى في سورة المؤمنون (آية 1)","سورة النور - آية (1) : من قوله تعالى في سورة النور (آية 1)","سورة الفرقان - آية (1) : من قوله تعالى في سورة الفرقان (آية 1)","سورة المؤمنون - آية (10) : من قوله تعالى في سورة المؤمنون (آية 10)","سورة النور - آية (5) : من قوله تعالى في سورة النور (آية 5)","سورة الفرقان - آية (2) : من قوله تعالى في سورة الفرقان (آية 2)","سورة المؤمنون - آية (19) : من قوله تعالى في سورة المؤمنون (آية 19)","سورة النور - آية (9) : من قوله تعالى في سورة النور (آية 9)","سورة الفرقان - آية (3) : من قوله تعالى في سورة الفرقان (آية 3)","سورة المؤمنون - آية (28) : من قوله تعالى في سورة المؤمنون (آية 28)","سورة النور - آية (13) : من قوله تعالى في سورة النور (آية 13)","سورة الفرقان - آية (4) : من قوله تعالى في سورة الفرقان (آية 4)","سورة المؤمنون - آية (37) : من قوله تعالى في سورة المؤمنون (آية 37)","سورة النور - آية (17) : من قوله تعالى في سورة النور (آية 17)","سورة الفرقان - آية (5) : من قوله تعالى في سورة الفرقان (آية 5)","سورة المؤمنون - آية (46) : من قوله تعالى في سورة المؤمنون (آية 46)","سورة النور - آية (21) : من قوله تعالى في سورة النور (آية 21)","سورة الفرقان - آية (6) : من قوله تعالى في سورة الفرقان (آية 6)","سورة المؤمنون - آية (55) : من قوله تعالى في سورة المؤمنون (آية 55)","سورة النور - آية (25) : من قوله تعالى في سورة النور (آية 25)","سورة الفرقان - آية (7) : من قوله تعالى في سورة الفرقان (آية 7)","سورة المؤمنون - آية (64) : من قوله تعالى في سورة المؤمنون (آية 64)","سورة النور - آية (29) : من قوله تعالى في سورة النور (آية 29)","سورة الفرقان - آية (8) : من قوله تعالى في سورة الفرقان (آية 8)","سورة المؤمنون - آية (73) : من قوله تعالى في سورة المؤمنون (آية 73)","سورة النور - آية (33) : من قوله تعالى في سورة النور (آية 33)","سورة الفرقان - آية (9) : من قوله تعالى في سورة الفرقان (آية 9)","سورة المؤمنون - آية (82) : من قوله تعالى في سورة المؤمنون (آية 82)","سورة النور - آية (37) : من قوله تعالى في سورة النور (آية 37)","سورة الفرقان - آية (10) : من قوله تعالى في سورة الفرقان (آية 10)","سورة المؤمنون - آية (91) : من قوله تعالى في سورة المؤمنون (آية 91)","سورة النور - آية (41) : من قوله تعالى في سورة النور (آية 41)","سورة الفرقان - آية (11) : من قوله تعالى في سورة الفرقان (آية 11)","سورة المؤمنون - آية (100) : من قوله تعالى في سورة المؤمنون (آية 100)","سورة النور - آية (45) : من قوله تعالى في سورة النور (آية 45)","سورة الفرقان - آية (12) : من قوله تعالى في سورة الفرقان (آية 12)","سورة المؤمنون - آية (109) : من قوله تعالى في سورة المؤمنون (آية 109)","سورة النور - آية (49) : من قوله تعالى في سورة النور (آية 49)","سورة الفرقان - آية (13) : من قوله تعالى في سورة الفرقان (آية 13)","سورة المؤمنون - آية (118) : من قوله تعالى في سورة المؤمنون (آية 118)"],["سورة الفرقان - آية (21) : من قوله تعالى في سورة الفرقان (آية 21)","سورة الشعراء - آية (1) : من قوله تعالى في سورة الشعراء (آية 1)","سورة النمل - آية (1) : من قوله تعالى في سورة النمل (آية 1)","سورة الفرقان - آية (25) : من قوله تعالى في سورة الفرقان (آية 25)","سورة الشعراء - آية (18) : من قوله تعالى في سورة الشعراء (آية 18)","سورة النمل - آية (5) : من قوله تعالى في سورة النمل (آية 5)","سورة الفرقان - آية (29) : من قوله تعالى في سورة الفرقان (آية 29)","سورة الشعراء - آية (35) : من قوله تعالى في سورة الشعراء (آية 35)","سورة النمل - آية (9) : من قوله تعالى في سورة النمل (آية 9)","سورة الفرقان - آية (33) : من قوله تعالى في سورة الفرقان (آية 33)","سورة الشعراء - آية (52) : من قوله تعالى في سورة الشعراء (آية 52)","سورة النمل - آية (13) : من قوله تعالى في سورة النمل (آية 13)","سورة الفرقان - آية (37) : من قوله تعالى في سورة الفرقان (آية 37)","سورة الشعراء - آية (69) : من قوله تعالى في سورة الشعراء (آية 69)","سورة النمل - آية (17) : من قوله تعالى في سورة النمل (آية 17)","سورة الفرقان - آية (41) : من قوله تعالى في سورة الفرقان (آية 41)","سورة الشعراء - آية (86) : من قوله تعالى في سورة الشعراء (آية 86)","سورة النمل - آية (21) : من قوله تعالى في سورة النمل (آية 21)","سورة الفرقان - آية (45) : من قوله تعالى في سورة الفرقان (آية 45)","سورة الشعراء - آية (103) : من قوله تعالى في سورة الشعراء (آية 103)","سورة النمل - آية (25) : من قوله تعالى في سورة النمل (آية 25)","سورة الفرقان - آية (49) : من قوله تعالى في سورة الفرقان (آية 49)","سورة الشعراء - آية (120) : من قوله تعالى في سورة الشعراء (آية 120)","سورة النمل - آية (29) : من قوله تعالى في سورة النمل (آية 29)","سورة الفرقان - آية (53) : من قوله تعالى في سورة الفرقان (آية 53)","سورة الشعراء - آية (137) : من قوله تعالى في سورة الشعراء (آية 137)","سورة النمل - آية (33) : من قوله تعالى في سورة النمل (آية 33)","سورة الفرقان - آية (57) : من قوله تعالى في سورة الفرقان (آية 57)","سورة الشعراء - آية (154) : من قوله تعالى في سورة الشعراء (آية 154)","سورة النمل - آية (37) : من قوله تعالى في سورة النمل (آية 37)","سورة الفرقان - آية (61) : من قوله تعالى في سورة الفرقان (آية 61)","سورة الشعراء - آية (171) : من قوله تعالى في سورة الشعراء (آية 171)","سورة النمل - آية (41) : من قوله تعالى في سورة النمل (آية 41)","سورة الفرقان - آية (65) : من قوله تعالى في سورة الفرقان (آية 65)","سورة الشعراء - آية (188) : من قوله تعالى في سورة الشعراء (آية 188)","سورة النمل - آية (45) : من قوله تعالى في سورة النمل (آية 45)","سورة الفرقان - آية (69) : من قوله تعالى في سورة الفرقان (آية 69)","سورة الشعراء - آية (205) : من قوله تعالى في سورة الشعراء (آية 205)","سورة النمل - آية (49) : من قوله تعالى في سورة النمل (آية 49)","سورة الفرقان - آية (73) : من قوله تعالى في سورة الفرقان (آية 73)"],["سورة النمل - آية (56) : من قوله تعالى في سورة النمل (آية 56)","سورة القصص - آية (1) : من قوله تعالى في سورة القصص (آية 1)","سورة العنكبوت - آية (1) : من قوله تعالى في سورة العنكبوت (آية 1)","سورة النمل - آية (58) : من قوله تعالى في سورة النمل (آية 58)","سورة القصص - آية (7) : من قوله تعالى في سورة القصص (آية 7)","سورة العنكبوت - آية (4) : من قوله تعالى في سورة العنكبوت (آية 4)","سورة النمل - آية (60) : من قوله تعالى في سورة النمل (آية 60)","سورة القصص - آية (13) : من قوله تعالى في سورة القصص (آية 13)","سورة العنكبوت - آية (7) : من قوله تعالى في سورة العنكبوت (آية 7)","سورة النمل - آية (62) : من قوله تعالى في سورة النمل (آية 62)","سورة القصص - آية (19) : من قوله تعالى في سورة القصص (آية 19)","سورة العنكبوت - آية (10) : من قوله تعالى في سورة العنكبوت (آية 10)","سورة النمل - آية (64) : من قوله تعالى في سورة النمل (آية 64)","سورة القصص - آية (25) : من قوله تعالى في سورة القصص (آية 25)","سورة العنكبوت - آية (13) : من قوله تعالى في سورة العنكبوت (آية 13)","سورة النمل - آية (66) : من قوله تعالى في سورة النمل (آية 66)","سورة القصص - آية (31) : من قوله تعالى في سورة القصص (آية 31)","سورة العنكبوت - آية (16) : من قوله تعالى في سورة العنكبوت (آية 16)","سورة النمل - آية (68) : من قوله تعالى في سورة النمل (آية 68)","سورة القصص - آية (37) : من قوله تعالى في سورة القصص (آية 37)","سورة العنكبوت - آية (19) : من قوله تعالى في سورة العنكبوت (آية 19)","سورة النمل - آية (70) : من قوله تعالى في سورة النمل (آية 70)","سورة القصص - آية (43) : من قوله تعالى في سورة القصص (آية 43)","سورة العنكبوت - آية (22) : من قوله تعالى في سورة العنكبوت (آية 22)","سورة النمل - آية (72) : من قوله تعالى في سورة النمل (آية 72)","سورة القصص - آية (49) : من قوله تعالى في سورة القصص (آية 49)","سورة العنكبوت - آية (25) : من قوله تعالى في سورة العنكبوت (آية 25)","سورة النمل - آية (74) : من قوله تعالى في سورة النمل (آية 74)","سورة القصص - آية (55) : من قوله تعالى في سورة القصص (آية 55)","سورة العنكبوت - آية (28) : من قوله تعالى في سورة العنكبوت (آية 28)","سورة النمل - آية (76) : من قوله تعالى في سورة النمل (آية 76)","سورة القصص - آية (61) : من قوله تعالى في سورة القصص (آية 61)","سورة العنكبوت - آية (31) : من قوله تعالى في سورة العنكبوت (آية 31)","سورة النمل - آية (78) : من قوله تعالى في سورة النمل (آية 78)","سورة القصص - آية (67) : من قوله تعالى في سورة القصص (آية 67)","سورة العنكبوت - آية (34) : من قوله تعالى في سورة العنكبوت (آية 34)","سورة النمل - آية (80) : من قوله تعالى في سورة النمل (آية 80)","سورة القصص - آية (73) : من قوله تعالى في سورة القصص (آية 73)","سورة العنكبوت - آية (37) : من قوله تعالى في سورة العنكبوت (آية 37)","سورة النمل - آية (82) : من قوله تعالى في سورة النمل (آية 82)"],["سورة العنكبوت - آية (46) : من قوله تعالى في سورة العنكبوت (آية 46)","سورة الروم - آية (1) : من قوله تعالى في سورة الروم (آية 1)","سورة لقمان - آية (1) : من قوله تعالى في سورة لقمان (آية 1)","سورة السجدة - آية (1) : من قوله تعالى في سورة السجدة (آية 1)","سورة الأحزاب - آية (1) : من قوله تعالى في سورة الأحزاب (آية 1)","سورة العنكبوت - آية (48) : من قوله تعالى في سورة العنكبوت (آية 48)","سورة الروم - آية (8) : من قوله تعالى في سورة الروم (آية 8)","سورة لقمان - آية (5) : من قوله تعالى في سورة لقمان (آية 5)","سورة السجدة - آية (4) : من قوله تعالى في سورة السجدة (آية 4)","سورة الأحزاب - آية (4) : من قوله تعالى في سورة الأحزاب (آية 4)","سورة العنكبوت - آية (50) : من قوله تعالى في سورة العنكبوت (آية 50)","سورة الروم - آية (15) : من قوله تعالى في سورة الروم (آية 15)","سورة لقمان - آية (9) : من قوله تعالى في سورة لقمان (آية 9)","سورة السجدة - آية (7) : من قوله تعالى في سورة السجدة (آية 7)","سورة الأحزاب - آية (7) : من قوله تعالى في سورة الأحزاب (آية 7)","سورة العنكبوت - آية (52) : من قوله تعالى في سورة العنكبوت (آية 52)","سورة الروم - آية (22) : من قوله تعالى في سورة الروم (آية 22)","سورة لقمان - آية (13) : من قوله تعالى في سورة لقمان (آية 13)","سورة السجدة - آية (10) : من قوله تعالى في سورة السجدة (آية 10)","سورة الأحزاب - آية (10) : من قوله تعالى في سورة الأحزاب (آية 10)","سورة العنكبوت - آية (54) : من قوله تعالى في سورة العنكبوت (آية 54)","سورة الروم - آية (29) : من قوله تعالى في سورة الروم (آية 29)","سورة لقمان - آية (17) : من قوله تعالى في سورة لقمان (آية 17)","سورة السجدة - آية (13) : من قوله تعالى في سورة السجدة (آية 13)","سورة الأحزاب - آية (13) : من قوله تعالى في سورة الأحزاب (آية 13)","سورة العنكبوت - آية (56) : من قوله تعالى في سورة العنكبوت (آية 56)","سورة الروم - آية (36) : من قوله تعالى في سورة الروم (آية 36)","سورة لقمان - آية (21) : من قوله تعالى في سورة لقمان (آية 21)","سورة السجدة - آية (16) : من قوله تعالى في سورة السجدة (آية 16)","سورة الأحزاب - آية (16) : من قوله تعالى في سورة الأحزاب (آية 16)","سورة العنكبوت - آية (58) : من قوله تعالى في سورة العنكبوت (آية 58)","سورة الروم - آية (43) : من قوله تعالى في سورة الروم (آية 43)","سورة لقمان - آية (25) : من قوله تعالى في سورة لقمان (آية 25)","سورة السجدة - آية (19) : من قوله تعالى في سورة السجدة (آية 19)","سورة الأحزاب - آية (19) : من قوله تعالى في سورة الأحزاب (آية 19)","سورة العنكبوت - آية (60) : من قوله تعالى في سورة العنكبوت (آية 60)","سورة الروم - آية (50) : من قوله تعالى في سورة الروم (آية 50)","سورة لقمان - آية (29) : من قوله تعالى في سورة لقمان (آية 29)","سورة السجدة - آية (22) : من قوله تعالى في سورة السجدة (آية 22)","سورة الأحزاب - آية (22) : من قوله تعالى في سورة الأحزاب (آية 22)"],["سورة الأحزاب - آية (31) : من قوله تعالى في سورة الأحزاب (آية 31)","سورة سبأ - آية (1) : من قوله تعالى في سورة سبأ (آية 1)","سورة فاطر - آية (1) : من قوله تعالى في سورة فاطر (آية 1)","سورة يس - آية (1) : من قوله تعالى في سورة يس (آية 1)","سورة الأحزاب - آية (35) : من قوله تعالى في سورة الأحزاب (آية 35)","سورة سبأ - آية (6) : من قوله تعالى في سورة سبأ (آية 6)","سورة فاطر - آية (5) : من قوله تعالى في سورة فاطر (آية 5)","سورة يس - آية (3) : من قوله تعالى في سورة يس (آية 3)","سورة الأحزاب - آية (39) : من قوله تعالى في سورة الأحزاب (آية 39)","سورة سبأ - آية (11) : من قوله تعالى في سورة سبأ (آية 11)","سورة فاطر - آية (9) : من قوله تعالى في سورة فاطر (آية 9)","سورة يس - آية (5) : من قوله تعالى في سورة يس (آية 5)","سورة الأحزاب - آية (43) : من قوله تعالى في سورة الأحزاب (آية 43)","سورة سبأ - آية (16) : من قوله تعالى في سورة سبأ (آية 16)","سورة فاطر - آية (13) : من قوله تعالى في سورة فاطر (آية 13)","سورة يس - آية (7) : من قوله تعالى في سورة يس (آية 7)","سورة الأحزاب - آية (47) : من قوله تعالى في سورة الأحزاب (آية 47)","سورة سبأ - آية (21) : من قوله تعالى في سورة سبأ (آية 21)","سورة فاطر - آية (17) : من قوله تعالى في سورة فاطر (آية 17)","سورة يس - آية (9) : من قوله تعالى في سورة يس (آية 9)","سورة الأحزاب - آية (51) : من قوله تعالى في سورة الأحزاب (آية 51)","سورة سبأ - آية (26) : من قوله تعالى في سورة سبأ (آية 26)","سورة فاطر - آية (21) : من قوله تعالى في سورة فاطر (آية 21)","سورة يس - آية (11) : من قوله تعالى في سورة يس (آية 11)","سورة الأحزاب - آية (55) : من قوله تعالى في سورة الأحزاب (آية 55)","سورة سبأ - آية (31) : من قوله تعالى في سورة سبأ (آية 31)","سورة فاطر - آية (25) : من قوله تعالى في سورة فاطر (آية 25)","سورة يس - آية (13) : من قوله تعالى في سورة يس (آية 13)","سورة الأحزاب - آية (59) : من قوله تعالى في سورة الأحزاب (آية 59)","سورة سبأ - آية (36) : من قوله تعالى في سورة سبأ (آية 36)","سورة فاطر - آية (29) : من قوله تعالى في سورة فاطر (آية 29)","سورة يس - آية (15) : من قوله تعالى في سورة يس (آية 15)","سورة الأحزاب - آية (63) : من قوله تعالى في سورة الأحزاب (آية 63)","سورة سبأ - آية (41) : من قوله تعالى في سورة سبأ (آية 41)","سورة فاطر - آية (33) : من قوله تعالى في سورة فاطر (آية 33)","سورة يس - آية (17) : من قوله تعالى في سورة يس (آية 17)","سورة الأحزاب - آية (67) : من قوله تعالى في سورة الأحزاب (آية 67)","سورة سبأ - آية (46) : من قوله تعالى في سورة سبأ (آية 46)","سورة فاطر - آية (37) : من قوله تعالى في سورة فاطر (آية 37)","سورة يس - آية (19) : من قوله تعالى في سورة يس (آية 19)"],["سورة يس - آية (28) : من قوله تعالى في سورة يس (آية 28)","سورة الصافات - آية (1) : من قوله تعالى في سورة الصافات (آية 1)","سورة ص - آية (1) : من قوله تعالى في سورة ص (آية 1)","سورة الزمر - آية (1) : من قوله تعالى في سورة الزمر (آية 1)","سورة يس - آية (33) : من قوله تعالى في سورة يس (آية 33)","سورة الصافات - آية (19) : من قوله تعالى في سورة الصافات (آية 19)","سورة ص - آية (9) : من قوله تعالى في سورة ص (آية 9)","سورة الزمر - آية (4) : من قوله تعالى في سورة الزمر (آية 4)","سورة يس - آية (38) : من قوله تعالى في سورة يس (آية 38)","سورة الصافات - آية (37) : من قوله تعالى في سورة الصافات (آية 37)","سورة ص - آية (17) : من قوله تعالى في سورة ص (آية 17)","سورة الزمر - آية (7) : من قوله تعالى في سورة الزمر (آية 7)","سورة يس - آية (43) : من قوله تعالى في سورة يس (آية 43)","سورة الصافات - آية (55) : من قوله تعالى في سورة الصافات (آية 55)","سورة ص - آية (25) : من قوله تعالى في سورة ص (آية 25)","سورة الزمر - آية (10) : من قوله تعالى في سورة الزمر (آية 10)","سورة يس - آية (48) : من قوله تعالى في سورة يس (آية 48)","سورة الصافات - آية (73) : من قوله تعالى في سورة الصافات (آية 73)","سورة ص - آية (33) : من قوله تعالى في سورة ص (آية 33)","سورة الزمر - آية (13) : من قوله تعالى في سورة الزمر (آية 13)","سورة يس - آية (53) : من قوله تعالى في سورة يس (آية 53)","سورة الصافات - آية (91) : من قوله تعالى في سورة الصافات (آية 91)","سورة ص - آية (41) : من قوله تعالى في سورة ص (آية 41)","سورة الزمر - آية (16) : من قوله تعالى في سورة الزمر (آية 16)","سورة يس - آية (58) : من قوله تعالى في سورة يس (آية 58)","سورة الصافات - آية (109) : من قوله تعالى في سورة الصافات (آية 109)","سورة ص - آية (49) : من قوله تعالى في سورة ص (آية 49)","سورة الزمر - آية (19) : من قوله تعالى في سورة الزمر (آية 19)","سورة يس - آية (63) : من قوله تعالى في سورة يس (آية 63)","سورة الصافات - آية (127) : من قوله تعالى في سورة الصافات (آية 127)","سورة ص - آية (57) : من قوله تعالى في سورة ص (آية 57)","سورة الزمر - آية (22) : من قوله تعالى في سورة الزمر (آية 22)","سورة يس - آية (68) : من قوله تعالى في سورة يس (آية 68)","سورة الصافات - آية (145) : من قوله تعالى في سورة الصافات (آية 145)","سورة ص - آية (65) : من قوله تعالى في سورة ص (آية 65)","سورة الزمر - آية (25) : من قوله تعالى في سورة الزمر (آية 25)","سورة يس - آية (73) : من قوله تعالى في سورة يس (آية 73)","سورة الصافات - آية (163) : من قوله تعالى في سورة الصافات (آية 163)","سورة ص - آية (73) : من قوله تعالى في سورة ص (آية 73)","سورة الزمر - آية (28) : من قوله تعالى في سورة الزمر (آية 28)"],["سورة الزمر - آية (32) : من قوله تعالى في سورة الزمر (آية 32)","سورة غافر - آية (1) : من قوله تعالى في سورة غافر (آية 1)","سورة فصلت - آية (1) : من قوله تعالى في سورة فصلت (آية 1)","سورة الزمر - آية (35) : من قوله تعالى في سورة الزمر (آية 35)","سورة غافر - آية (7) : من قوله تعالى في سورة غافر (آية 7)","سورة فصلت - آية (4) : من قوله تعالى في سورة فصلت (آية 4)","سورة الزمر - آية (38) : من قوله تعالى في سورة الزمر (آية 38)","سورة غافر - آية (13) : من قوله تعالى في سورة غافر (آية 13)","سورة فصلت - آية (7) : من قوله تعالى في سورة فصلت (آية 7)","سورة الزمر - آية (41) : من قوله تعالى في سورة الزمر (آية 41)","سورة غافر - آية (19) : من قوله تعالى في سورة غافر (آية 19)","سورة فصلت - آية (10) : من قوله تعالى في سورة فصلت (آية 10)","سورة الزمر - آية (44) : من قوله تعالى في سورة الزمر (آية 44)","سورة غافر - آية (25) : من قوله تعالى في سورة غافر (آية 25)","سورة فصلت - آية (13) : من قوله تعالى في سورة فصلت (آية 13)","سورة الزمر - آية (47) : من قوله تعالى في سورة الزمر (آية 47)","سورة غافر - آية (31) : من قوله تعالى في سورة غافر (آية 31)","سورة فصلت - آية (16) : من قوله تعالى في سورة فصلت (آية 16)","سورة الزمر - آية (50) : من قوله تعالى في سورة الزمر (آية 50)","سورة غافر - آية (37) : من قوله تعالى في سورة غافر (آية 37)","سورة فصلت - آية (19) : من قوله تعالى في سورة فصلت (آية 19)","سورة الزمر - آية (53) : من قوله تعالى في سورة الزمر (آية 53)","سورة غافر - آية (43) : من قوله تعالى في سورة غافر (آية 43)","سورة فصلت - آية (22) : من قوله تعالى في سورة فصلت (آية 22)","سورة الزمر - آية (56) : من قوله تعالى في سورة الزمر (آية 56)","سورة غافر - آية (49) : من قوله تعالى في سورة غافر (آية 49)","سورة فصلت - آية (25) : من قوله تعالى في سورة فصلت (آية 25)","سورة الزمر - آية (59) : من قوله تعالى في سورة الزمر (آية 59)","سورة غافر - آية (55) : من قوله تعالى في سورة غافر (آية 55)","سورة فصلت - آية (28) : من قوله تعالى في سورة فصلت (آية 28)","سورة الزمر - آية (62) : من قوله تعالى في سورة الزمر (آية 62)","سورة غافر - آية (61) : من قوله تعالى في سورة غافر (آية 61)","سورة فصلت - آية (31) : من قوله تعالى في سورة فصلت (آية 31)","سورة الزمر - آية (65) : من قوله تعالى في سورة الزمر (آية 65)","سورة غافر - آية (67) : من قوله تعالى في سورة غافر (آية 67)","سورة فصلت - آية (34) : من قوله تعالى في سورة فصلت (آية 34)","سورة الزمر - آية (68) : من قوله تعالى في سورة الزمر (آية 68)","سورة غافر - آية (73) : من قوله تعالى في سورة غافر (آية 73)","سورة فصلت - آية (37) : من قوله تعالى في سورة فصلت (آية 37)","سورة الزمر - آية (71) : من قوله تعالى في سورة الزمر (آية 71)"],["سورة فصلت - آية (47) : من قوله تعالى في سورة فصلت (آية 47)","سورة الشورى - آية (1) : من قوله تعالى في سورة الشورى (آية 1)","سورة الزخرف - آية (1) : من قوله تعالى في سورة الزخرف (آية 1)","سورة الدخان - آية (1) : من قوله تعالى في سورة الدخان (آية 1)","سورة الجاثية - آية (1) : من قوله تعالى في سورة الجاثية (آية 1)","سورة فصلت - آية (48) : من قوله تعالى في سورة فصلت (آية 48)","سورة الشورى - آية (7) : من قوله تعالى في سورة الشورى (آية 7)","سورة الزخرف - آية (12) : من قوله تعالى في سورة الزخرف (آية 12)","سورة الدخان - آية (8) : من قوله تعالى في سورة الدخان (آية 8)","سورة الجاثية - آية (5) : من قوله تعالى في سورة الجاثية (آية 5)","سورة فصلت - آية (49) : من قوله تعالى في سورة فصلت (آية 49)","سورة الشورى - آية (13) : من قوله تعالى في سورة الشورى (آية 13)","سورة الزخرف - آية (23) : من قوله تعالى في سورة الزخرف (آية 23)","سورة الدخان - آية (15) : من قوله تعالى في سورة الدخان (آية 15)","سورة الجاثية - آية (9) : من قوله تعالى في سورة الجاثية (آية 9)","سورة فصلت - آية (50) : من قوله تعالى في سورة فصلت (آية 50)","سورة الشورى - آية (19) : من قوله تعالى في سورة الشورى (آية 19)","سورة الزخرف - آية (34) : من قوله تعالى في سورة الزخرف (آية 34)","سورة الدخان - آية (22) : من قوله تعالى في سورة الدخان (آية 22)","سورة الجاثية - آية (13) : من قوله تعالى في سورة الجاثية (آية 13)","سورة فصلت - آية (51) : من قوله تعالى في سورة فصلت (آية 51)","سورة الشورى - آية (25) : من قوله تعالى في سورة الشورى (آية 25)","سورة الزخرف - آية (45) : من قوله تعالى في سورة الزخرف (آية 45)","سورة الدخان - آية (29) : من قوله تعالى في سورة الدخان (آية 29)","سورة الجاثية - آية (17) : من قوله تعالى في سورة الجاثية (آية 17)","سورة فصلت - آية (52) : من قوله تعالى في سورة فصلت (آية 52)","سورة الشورى - آية (31) : من قوله تعالى في سورة الشورى (آية 31)","سورة الزخرف - آية (56) : من قوله تعالى في سورة الزخرف (آية 56)","سورة الدخان - آية (36) : من قوله تعالى في سورة الدخان (آية 36)","سورة الجاثية - آية (21) : من قوله تعالى في سورة الجاثية (آية 21)","سورة فصلت - آية (53) : من قوله تعالى في سورة فصلت (آية 53)","سورة الشورى - آية (37) : من قوله تعالى في سورة الشورى (آية 37)","سورة الزخرف - آية (67) : من قوله تعالى في سورة الزخرف (آية 67)","سورة الدخان - آية (43) : من قوله تعالى في سورة الدخان (آية 43)","سورة الجاثية - آية (25) : من قوله تعالى في سورة الجاثية (آية 25)","سورة فصلت - آية (54) : من قوله تعالى في سورة فصلت (آية 54)","سورة الشورى - آية (43) : من قوله تعالى في سورة الشورى (آية 43)","سورة الزخرف - آية (78) : من قوله تعالى في سورة الزخرف (آية 78)","سورة الدخان - آية (50) : من قوله تعالى في سورة الدخان (آية 50)","سورة الجاثية - آية (29) : من قوله تعالى في سورة الجاثية (آية 29)"],["سورة الأحقاف - آية (1) : من قوله تعالى في سورة الأحقاف (آية 1)","سورة محمد - آية (1) : من قوله تعالى في سورة محمد (آية 1)","سورة الفتح - آية (1) : من قوله تعالى في سورة الفتح (آية 1)","سورة الحجرات - آية (1) : من قوله تعالى في سورة الحجرات (آية 1)","سورة ق - آية (1) : من قوله تعالى في سورة ق (آية 1)","سورة الذاريات - آية (1) : من قوله تعالى في سورة الذاريات (آية 1)","سورة الأحقاف - آية (6) : من قوله تعالى في سورة الأحقاف (آية 6)","سورة محمد - آية (7) : من قوله تعالى في سورة محمد (آية 7)","سورة الفتح - آية (5) : من قوله تعالى في سورة الفتح (آية 5)","سورة الحجرات - آية (3) : من قوله تعالى في سورة الحجرات (آية 3)","سورة ق - آية (8) : من قوله تعالى في سورة ق (آية 8)","سورة الذاريات - آية (5) : من قوله تعالى في سورة الذاريات (آية 5)","سورة الأحقاف - آية (11) : من قوله تعالى في سورة الأحقاف (آية 11)","سورة محمد - آية (13) : من قوله تعالى في سورة محمد (آية 13)","سورة الفتح - آية (9) : من قوله تعالى في سورة الفتح (آية 9)","سورة الحجرات - آية (5) : من قوله تعالى في سورة الحجرات (آية 5)","سورة ق - آية (15) : من قوله تعالى في سورة ق (آية 15)","سورة الذاريات - آية (9) : من قوله تعالى في سورة الذاريات (آية 9)","سورة الأحقاف - آية (16) : من قوله تعالى في سورة الأحقاف (آية 16)","سورة محمد - آية (19) : من قوله تعالى في سورة محمد (آية 19)","سورة الفتح - آية (13) : من قوله تعالى في سورة الفتح (آية 13)","سورة الحجرات - آية (7) : من قوله تعالى في سورة الحجرات (آية 7)","سورة ق - آية (22) : من قوله تعالى في سورة ق (آية 22)","سورة الذاريات - آية (13) : من قوله تعالى في سورة الذاريات (آية 13)","سورة الأحقاف - آية (21) : من قوله تعالى في سورة الأحقاف (آية 21)","سورة محمد - آية (25) : من قوله تعالى في سورة محمد (آية 25)","سورة الفتح - آية (17) : من قوله تعالى في سورة الفتح (آية 17)","سورة الحجرات - آية (9) : من قوله تعالى في سورة الحجرات (آية 9)","سورة ق - آية (29) : من قوله تعالى في سورة ق (آية 29)","سورة الذاريات - آية (17) : من قوله تعالى في سورة الذاريات (آية 17)","سورة الأحقاف - آية (26) : من قوله تعالى في سورة الأحقاف (آية 26)","سورة محمد - آية (31) : من قوله تعالى في سورة محمد (آية 31)","سورة الفتح - آية (21) : من قوله تعالى في سورة الفتح (آية 21)","سورة الحجرات - آية (11) : من قوله تعالى في سورة الحجرات (آية 11)","سورة ق - آية (36) : من قوله تعالى في سورة ق (آية 36)","سورة الذاريات - آية (21) : من قوله تعالى في سورة الذاريات (آية 21)","سورة الأحقاف - آية (31) : من قوله تعالى في سورة الأحقاف (آية 31)","سورة محمد - آية (37) : من قوله تعالى في سورة محمد (آية 37)","سورة الفتح - آية (25) : من قوله تعالى في سورة الفتح (آية 25)","سورة الحجرات - آية (13) : من قوله تعالى في سورة الحجرات (آية 13)"],["سورة الذاريات - آية (31) : من قوله تعالى في سورة الذاريات (آية 31)","سورة الطور - آية (1) : من قوله تعالى في سورة الطور (آية 1)","سورة النجم - آية (1) : من قوله تعالى في سورة النجم (آية 1)","سورة القمر - آية (1) : من قوله تعالى في سورة القمر (آية 1)","سورة الرحمن - آية (1) : من قوله تعالى في سورة الرحمن (آية 1)","سورة الواقعة - آية (1) : من قوله تعالى في سورة الواقعة (آية 1)","سورة الحديد - آية (1) : من قوله تعالى في سورة الحديد (آية 1)","سورة الذاريات - آية (36) : من قوله تعالى في سورة الذاريات (آية 36)","سورة الطور - آية (10) : من قوله تعالى في سورة الطور (آية 10)","سورة النجم - آية (13) : من قوله تعالى في سورة النجم (آية 13)","سورة القمر - آية (11) : من قوله تعالى في سورة القمر (آية 11)","سورة الرحمن - آية (16) : من قوله تعالى في سورة الرحمن (آية 16)","سورة الواقعة - آية (20) : من قوله تعالى في سورة الواقعة (آية 20)","سورة الحديد - آية (6) : من قوله تعالى في سورة الحديد (آية 6)","سورة الذاريات - آية (41) : من قوله تعالى في سورة الذاريات (آية 41)","سورة الطور - آية (19) : من قوله تعالى في سورة الطور (آية 19)","سورة النجم - آية (25) : من قوله تعالى في سورة النجم (آية 25)","سورة القمر - آية (21) : من قوله تعالى في سورة القمر (آية 21)","سورة الرحمن - آية (31) : من قوله تعالى في سورة الرحمن (آية 31)","سورة الواقعة - آية (39) : من قوله تعالى في سورة الواقعة (آية 39)","سورة الحديد - آية (11) : من قوله تعالى في سورة الحديد (آية 11)","سورة الذاريات - آية (46) : من قوله تعالى في سورة الذاريات (آية 46)","سورة الطور - آية (28) : من قوله تعالى في سورة الطور (آية 28)","سورة النجم - آية (37) : من قوله تعالى في سورة النجم (آية 37)","سورة القمر - آية (31) : من قوله تعالى في سورة القمر (آية 31)","سورة الرحمن - آية (46) : من قوله تعالى في سورة الرحمن (آية 46)","سورة الواقعة - آية (58) : من قوله تعالى في سورة الواقعة (آية 58)","سورة الحديد - آية (16) : من قوله تعالى في سورة الحديد (آية 16)","سورة الذاريات - آية (51) : من قوله تعالى في سورة الذاريات (آية 51)","سورة الطور - آية (37) : من قوله تعالى في سورة الطور (آية 37)","سورة النجم - آية (49) : من قوله تعالى في سورة النجم (آية 49)","سورة القمر - آية (41) : من قوله تعالى في سورة القمر (آية 41)","سورة الرحمن - آية (61) : من قوله تعالى في سورة الرحمن (آية 61)","سورة الواقعة - آية (77) : من قوله تعالى في سورة الواقعة (آية 77)","سورة الحديد - آية (21) : من قوله تعالى في سورة الحديد (آية 21)","سورة الذاريات - آية (56) : من قوله تعالى في سورة الذاريات (آية 56)","سورة الطور - آية (46) : من قوله تعالى في سورة الطور (آية 46)","سورة النجم - آية (61) : من قوله تعالى في سورة النجم (آية 61)","سورة القمر - آية (51) : من قوله تعالى في سورة القمر (آية 51)","سورة الرحمن - آية (76) : من قوله تعالى في سورة الرحمن (آية 76)"],["سورة المجادلة - آية (1) : من قوله تعالى في سورة المجادلة (آية 1)","سورة الحشر - آية (1) : من قوله تعالى في سورة الحشر (آية 1)","سورة الممتحنة - آية (1) : من قوله تعالى في سورة الممتحنة (آية 1)","سورة الصف - آية (1) : من قوله تعالى في سورة الصف (آية 1)","سورة الجمعة - آية (1) : من قوله تعالى في سورة الجمعة (آية 1)","سورة المنافقون - آية (1) : من قوله تعالى في سورة المنافقون (آية 1)","سورة التغابن - آية (1) : من قوله تعالى في سورة التغابن (آية 1)","سورة الطلاق - آية (1) : من قوله تعالى في سورة الطلاق (آية 1)","سورة التحريم - آية (1) : من قوله تعالى في سورة التحريم (آية 1)","سورة المجادلة - آية (6) : من قوله تعالى في سورة المجادلة (آية 6)","سورة الحشر - آية (6) : من قوله تعالى في سورة الحشر (آية 6)","سورة الممتحنة - آية (4) : من قوله تعالى في سورة الممتحنة (آية 4)","سورة الصف - آية (4) : من قوله تعالى في سورة الصف (آية 4)","سورة الجمعة - آية (3) : من قوله تعالى في سورة الجمعة (آية 3)","سورة المنافقون - آية (3) : من قوله تعالى في سورة المنافقون (آية 3)","سورة التغابن - آية (5) : من قوله تعالى في سورة التغابن (آية 5)","سورة الطلاق - آية (3) : من قوله تعالى في سورة الطلاق (آية 3)","سورة التحريم - آية (3) : من قوله تعالى في سورة التحريم (آية 3)","سورة المجادلة - آية (11) : من قوله تعالى في سورة المجادلة (آية 11)","سورة الحشر - آية (11) : من قوله تعالى في سورة الحشر (آية 11)","سورة الممتحنة - آية (7) : من قوله تعالى في سورة الممتحنة (آية 7)","سورة الصف - آية (7) : من قوله تعالى في سورة الصف (آية 7)","سورة الجمعة - آية (5) : من قوله تعالى في سورة الجمعة (آية 5)","سورة المنافقون - آية (5) : من قوله تعالى في سورة المنافقون (آية 5)","سورة التغابن - آية (9) : من قوله تعالى في سورة التغابن (آية 9)","سورة الطلاق - آية (5) : من قوله تعالى في سورة الطلاق (آية 5)","سورة التحريم - آية (5) : من قوله تعالى في سورة التحريم (آية 5)","سورة المجادلة - آية (16) : من قوله تعالى في سورة المجادلة (آية 16)","سورة الحشر - آية (16) : من قوله تعالى في سورة الحشر (آية 16)","سورة الممتحنة - آية (10) : من قوله تعالى في سورة الممتحنة (آية 10)","سورة الصف - آية (10) : من قوله تعالى في سورة الصف (آية 10)","سورة الجمعة - آية (7) : من قوله تعالى في سورة الجمعة (آية 7)","سورة المنافقون - آية (7) : من قوله تعالى في سورة المنافقون (آية 7)","سورة التغابن - آية (13) : من قوله تعالى في سورة التغابن (آية 13)","سورة الطلاق - آية (7) : من قوله تعالى في سورة الطلاق (آية 7)","سورة التحريم - آية (7) : من قوله تعالى في سورة التحريم (آية 7)","سورة المجادلة - آية (21) : من قوله تعالى في سورة المجادلة (آية 21)","سورة الحشر - آية (21) : من قوله تعالى في سورة الحشر (آية 21)","سورة الممتحنة - آية (13) : من قوله تعالى في سورة الممتحنة (آية 13)","سورة الصف - آية (13) : من قوله تعالى في سورة الصف (آية 13)"],["سورة الملك - آية (1) : من قوله تعالى في سورة الملك (آية 1)","سورة القلم - آية (1) : من قوله تعالى في سورة القلم (آية 1)","سورة الحاقة - آية (1) : من قوله تعالى في سورة الحاقة (آية 1)","سورة المعارج - آية (1) : من قوله تعالى في سورة المعارج (آية 1)","سورة نوح - آية (1) : من قوله تعالى في سورة نوح (آية 1)","سورة الجن - آية (1) : من قوله تعالى في سورة الجن (آية 1)","سورة المزمل - آية (1) : من قوله تعالى في سورة المزمل (آية 1)","سورة المدثر - آية (1) : من قوله تعالى في سورة المدثر (آية 1)","سورة القيامة - آية (1) : من قوله تعالى في سورة القيامة (آية 1)","سورة الإنسان - آية (1) : من قوله تعالى في سورة الإنسان (آية 1)","سورة المرسلات - آية (1) : من قوله تعالى في سورة المرسلات (آية 1)","سورة الملك - آية (10) : من قوله تعالى في سورة الملك (آية 10)","سورة القلم - آية (18) : من قوله تعالى في سورة القلم (آية 18)","سورة الحاقة - آية (18) : من قوله تعالى في سورة الحاقة (آية 18)","سورة المعارج - آية (15) : من قوله تعالى في سورة المعارج (آية 15)","سورة نوح - آية (10) : من قوله تعالى في سورة نوح (آية 10)","سورة الجن - آية (10) : من قوله تعالى في سورة الجن (آية 10)","سورة المزمل - آية (7) : من قوله تعالى في سورة المزمل (آية 7)","سورة المدثر - آية (19) : من قوله تعالى في سورة المدثر (آية 19)","سورة القيامة - آية (14) : من قوله تعالى في سورة القيامة (آية 14)","سورة الإنسان - آية (11) : من قوله تعالى في سورة الإنسان (آية 11)","سورة المرسلات - آية (17) : من قوله تعالى في سورة المرسلات (آية 17)","سورة الملك - آية (19) : من قوله تعالى في سورة الملك (آية 19)","سورة القلم - آية (35) : من قوله تعالى في سورة القلم (آية 35)","سورة الحاقة - آية (35) : من قوله تعالى في سورة الحاقة (آية 35)","سورة المعارج - آية (29) : من قوله تعالى في سورة المعارج (آية 29)","سورة نوح - آية (19) : من قوله تعالى في سورة نوح (آية 19)","سورة الجن - آية (19) : من قوله تعالى في سورة الجن (آية 19)","سورة المزمل - آية (13) : من قوله تعالى في سورة المزمل (آية 13)","سورة المدثر - آية (37) : من قوله تعالى في سورة المدثر (آية 37)","سورة القيامة - آية (27) : من قوله تعالى في سورة القيامة (آية 27)","سورة الإنسان - آية (21) : من قوله تعالى في سورة الإنسان (آية 21)","سورة المرسلات - آية (33) : من قوله تعالى في سورة المرسلات (آية 33)","سورة الملك - آية (28) : من قوله تعالى في سورة الملك (آية 28)","سورة القلم - آية (52) : من قوله تعالى في سورة القلم (آية 52)","سورة الحاقة - آية (52) : من قوله تعالى في سورة الحاقة (آية 52)","سورة المعارج - آية (43) : من قوله تعالى في سورة المعارج (آية 43)","سورة نوح - آية (28) : من قوله تعالى في سورة نوح (آية 28)","سورة الجن - آية (28) : من قوله تعالى في سورة الجن (آية 28)","سورة المزمل - آية (19) : من قوله تعالى في سورة المزمل (آية 19)"],["سورة النبأ - آية (1) : من قوله تعالى في سورة النبأ (آية 1)","سورة النازعات - آية (1) : من قوله تعالى في سورة النازعات (آية 1)","سورة عبس - آية (1) : من قوله تعالى في سورة عبس (آية 1)","سورة التكوير - آية (1) : من قوله تعالى في سورة التكوير (آية 1)","سورة الإنفطار - آية (1) : من قوله تعالى في سورة الإنفطار (آية 1)","سورة المطففين - آية (1) : من قوله تعالى في سورة المطففين (آية 1)","سورة الإنشقاق - آية (1) : من قوله تعالى في سورة الإنشقاق (آية 1)","سورة البروج - آية (1) : من قوله تعالى في سورة البروج (آية 1)","سورة الطارق - آية (1) : من قوله تعالى في سورة الطارق (آية 1)","سورة الأعلى - آية (1) : من قوله تعالى في سورة الأعلى (آية 1)","سورة الغاشية - آية (1) : من قوله تعالى في سورة الغاشية (آية 1)","سورة الفجر - آية (1) : من قوله تعالى في سورة الفجر (آية 1)","سورة البلد - آية (1) : من قوله تعالى في سورة البلد (آية 1)","سورة الشمس - آية (1) : من قوله تعالى في سورة الشمس (آية 1)","سورة الليل - آية (1) : من قوله تعالى في سورة الليل (آية 1)","سورة الضحى - آية (1) : من قوله تعالى في سورة الضحى (آية 1)","سورة الشرح - آية (1) : من قوله تعالى في سورة الشرح (آية 1)","سورة التين - آية (1) : من قوله تعالى في سورة التين (آية 1)","سورة العلق - آية (1) : من قوله تعالى في سورة العلق (آية 1)","سورة القدر - آية (1) : من قوله تعالى في سورة القدر (آية 1)","سورة البينة - آية (1) : من قوله تعالى في سورة البينة (آية 1)","سورة الزلزلة - آية (1) : من قوله تعالى في سورة الزلزلة (آية 1)","سورة العاديات - آية (1) : من قوله تعالى في سورة العاديات (آية 1)","سورة القارعة - آية (1) : من قوله تعالى في سورة القارعة (آية 1)","سورة التكاثر - آية (1) : من قوله تعالى في سورة التكاثر (آية 1)","سورة العصر - آية (1) : من قوله تعالى في سورة العصر (آية 1)","سورة الهمزة - آية (1) : من قوله تعالى في سورة الهمزة (آية 1)","سورة الفيل - آية (1) : من قوله تعالى في سورة الفيل (آية 1)","سورة قريش - آية (1) : من قوله تعالى في سورة قريش (آية 1)","سورة الماعون - آية (1) : من قوله تعالى في سورة الماعون (آية 1)","سورة الكوثر - آية (1) : من قوله تعالى في سورة الكوثر (آية 1)","سورة الكافرون - آية (1) : من قوله تعالى في سورة الكافرون (آية 1)","سورة النصر - آية (1) : من قوله تعالى في سورة النصر (آية 1)","سورة المسد - آية (1) : من قوله تعالى في سورة المسد (آية 1)","سورة الإخلاص - آية (1) : من قوله تعالى في سورة الإخلاص (آية 1)","سورة الفلق - آية (1) : من قوله تعالى في سورة الفلق (آية 1)","سورة الناس - آية (1) : من قوله تعالى في سورة الناس (آية 1)","سورة النبأ - آية (40) : من قوله تعالى في سورة النبأ (آية 40)","سورة النازعات - آية (46) : من قوله تعالى في سورة النازعات (آية 46)","سورة عبس - آية (42) : من قوله تعالى في سورة عبس (آية 42)"]];
-  const NOTE = 'تسميع 1.5 صفحة / أو حسب تحديد المعلم';
-  const STATE_KEY = 'sawaed-exam-state';   // تبديل المواضع الحالي (مشترك بين الأجهزة)
-  const LOG_KEY = 'sawaed-exam-log';       // سجل الامتحانات
-
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const today = () => new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
-
-  function toast(m, err){
-    const el = document.getElementById('saveStatus'); if(!el) return;
-    el.textContent = m; el.style.background = err ? 'var(--danger)' : 'var(--green)';
-    el.style.zIndex = 2000; el.style.display = 'block';
-    clearTimeout(toast.t); toast.t = setTimeout(()=>{ el.style.display='none'; }, err ? 5000 : 2400);
-  }
-
-  // strict=true: لو فشلت القراءة بسبب الشبكة (مش "ما في بيانات") نرمي خطأ بدل ما نرجّع null،
-  // عشان ما نكتب فوق الحالة المحفوظة بحالة جديدة بالغلط.
-  async function sget(k, strict){
-    try{ const r = await window.storage.get(k, false); return r && r.value ? JSON.parse(r.value) : null; }
-    catch(e){
-      if(strict && !/not found/i.test(String((e && e.message) || ''))) throw e;
-      return null;
-    }
-  }
-  async function sset(k, v){
-    for(let i=0;i<3;i++){
-      try{ if(await window.storage.set(k, JSON.stringify(v), false)) return true; }catch(e){ console.error(e); }
-      await sleep(500*(i+1));
-    }
-    return false;
-  }
-
-  // ---- حالة المواضع: perms[جزء][رقم الموضع-1] = رقم النص بالبنك ----
-  function normState(st){
-    if(!st || !st.perms) st = { perms:{}, burned:{} };
-    st.burned = st.burned || {};
-    for(let j=1;j<=30;j++){
-      if(!Array.isArray(st.perms[j]) || st.perms[j].length !== 40) st.perms[j] = shuffle([...Array(40).keys()]);
-    }
-    return st;
-  }
-  // قراءة أحدث نسخة ← تعديل ← حفظ (بالدور، عشان ما تتداخل الكتابات)
-  let chain = Promise.resolve();
-  function mutate(fn){
-    const run = async () => {
-      let cur;
-      try{ cur = await sget(STATE_KEY, true); }
-      catch(e){ console.error(e); toast('⚠️ تعذّر قراءة حالة المواضع، تأكدي من الإنترنت', true); throw e; }
-      const st = normState(cur);
-      fn(st);
-      if(!(await sset(STATE_KEY, st))){
-        toast('⚠️ تعذّر حفظ حالة المواضع، تأكدي من الإنترنت', true);
-        throw new Error('state save failed');
-      }
-      return st;
-    };
-    const p = chain.then(run); chain = p.catch(()=>{}); return p;
-  }
-  // تغيير كامل لمواضع الجزء، مع ضمان إن المواضع اللي انفتحت تصير نصها مختلف
-  function reshuffle(st, j, slots){
-    const old = st.perms[j], txt = old.map(i => POS[j-1][i]);
-    let p = shuffle(old);
-    for(let t=0; t<300 && !slots.every(s => POS[j-1][p[s-1]] !== txt[s-1]); t++) p = shuffle(old);
-    st.perms[j] = p; delete st.burned[j];
-  }
-
-  // ---- الواجهة ----
-  let S = null; // جلسة الامتحان الحالية
-  const card = document.createElement('div');
-  card.className = 'exam-card'; card.id = 'examCard';
-  card.innerHTML = `
-    <h3>📝 الامتحانات <span class="ex-note">(مستقلة عن الشعب)</span></h3>
-    <p class="ex-hint">.</p>
-    <button class="btn btn-gold btn-block" id="startExamBtn">▶ بدء امتحان طالب</button>
-    <button class="btn btn-outline btn-block" style="margin-top:8px;" id="examLogBtn">📜 سجل الامتحانات</button>
-    <div id="examLogPanel" style="display:none"></div>`;
-  const anchor = document.querySelector('.markaz-title');
-  const root = document.getElementById('appRoot') || document.body;
-  if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(card, anchor);
-  else root.insertBefore(card, root.firstChild);
-
-  const modal = document.createElement('div');
-  modal.className = 'exam-modal'; modal.id = 'examModal';
-  modal.innerHTML = `<div class="exam-box"><div class="exam-head"><span>📝 امتحان</span><button class="ex-x" id="exClose">✕</button></div><div id="examBody"></div></div>`;
-  document.body.appendChild(modal);
-  const body = modal.querySelector('#examBody');
-
-  async function loadNames(){
-    const names = new Set();
-    const list = (await sget('sawaed-halaqat-list')) || [{id:'h1'},{id:'h2'}];
-    for(const h of list){
-      const c = await sget(h.id === 'h1' ? 'sawaed-config' : 'sawaed-config:' + h.id);
-      ((c && c.students) || []).forEach(s => { if((s.name||'').trim()) names.add(s.name.trim()); });
-    }
-    return [...names];
-  }
-
-  async function openExam(){
-    S = null; modal.style.display = 'flex';
-    body.innerHTML = '<p class="ex-hint">جارِ التحضير...</p>';
-    // لو في امتحان انقطع قبل ما ينتهي (انسكّر المتصفح): نغيّر مواضع أجزائه أول
-    try{
-      await mutate(st => { Object.keys(st.burned).forEach(j => { if((st.burned[j]||[]).length) reshuffle(st, j, st.burned[j]); }); });
-    }catch(e){ modal.style.display = 'none'; return; }
-    const names = await loadNames();
-    body.innerHTML = `
-      <label class="ex-lbl">اسم الطالب</label>
-      <input id="exName" list="exNames" class="ex-input" placeholder="اكتبي أو اختاري اسم الطالب" autocomplete="off">
-      <datalist id="exNames">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
-      <div class="ex-row"><b>اختاري الأجزاء <span id="exCount" class="ex-note">(0)</span></b>
-        <button class="ex-mini" id="exAll">الكل</button><button class="ex-mini" id="exNone">مسح</button></div>
-      <div class="ex-juz-grid">${JUZ.map((n,i) => `<label class="ex-juz"><input type="checkbox" value="${i+1}"><span>${esc(n)}</span></label>`).join('')}</div>
-      <button class="btn btn-gold btn-block" id="exGo">▶ ابدأ الامتحان</button>`;
-  }
-
-  function picked(j, s){ return (S.picks[j] || []).some(p => p.slot === s); }
-
-  function renderPick(){
-    body.innerHTML = `<div class="ex-who">👤 ${esc(S.name)}</div>` + S.juz.map(j => `
-      <div class="ex-sec">
-        <div class="ex-sec-h"><b>${esc(JUZ[j-1])}</b><button class="ex-mini" data-rand="${j}">🎲 موضع عشوائي</button></div>
-        <div class="ex-slots">${[...Array(40)].map((_,i) => `<button class="ex-slot" data-j="${j}" data-s="${i+1}">${i+1}</button>`).join('')}</div>
-        <div class="ex-res" id="exRes${j}"></div>
-      </div>`).join('') + `<button class="btn btn-green btn-block" id="exFinish">✅ انتهى الامتحان (غيّري المواضع)</button>`;
-  }
-
-  function paintRes(j){
-    const res = body.querySelector('#exRes' + j); if(!res) return;
-    res.innerHTML = (S.picks[j] || []).map(p => `<div class="ex-pick"><span class="ex-n">${p.slot}</span><span>${esc(JUZ[j-1].replace(/\s*\(.*\)/,''))} — ${esc(p.text)} <span class="ex-note">(${NOTE})</span></span></div>`).join('');
-    (S.picks[j] || []).forEach(p => { const b = body.querySelector(`.ex-slot[data-j="${j}"][data-s="${p.slot}"]`); if(b) b.classList.add('on'); });
-  }
-
-  async function reveal(j, s){
-    if(!S || S.busy || picked(j, s)) return;
-    S.busy = true;
-    const btn = body.querySelector(`.ex-slot[data-j="${j}"][data-s="${s}"]`); if(btn) btn.classList.add('wait');
-    try{
-      // نقرأ النص من النسخة الأحدث بالسحابة، ونعلّم الموضع "محروق" فورًا
-      const st = await mutate(st => { const b = st.burned[j] = st.burned[j] || []; if(!b.includes(s)) b.push(s); });
-      (S.picks[j] = S.picks[j] || []).push({ slot: s, text: POS[j-1][st.perms[j][s-1]] });
-      paintRes(j);
-    }catch(e){ console.error(e); toast('⚠️ تعذّر فتح الموضع، جرّبي مرة ثانية', true); }
-    if(btn) btn.classList.remove('wait');
-    S.busy = false;
-  }
-
-  function randomPick(j){
-    const free = [...Array(40).keys()].map(i => i+1).filter(s => !picked(j, s));
-    if(!free.length){ toast('كل مواضع هالجزء انفتحت', true); return; }
-    reveal(j, free[Math.floor(Math.random()*free.length)]);
-  }
-
-  async function finish(){
-    if(!S || S.finishing) return;
-    while(S.busy) await sleep(100);
-    S.finishing = true;
-    const touched = S.juz.filter(j => (S.picks[j] || []).length);
-    if(touched.length){
-      try{
-        await mutate(st => touched.forEach(j => reshuffle(st, j, S.picks[j].map(p => p.slot))));
-      }catch(e){
-        // ما نسكّر النافذة، عشان تقدري تعيدي المحاولة بدون ما تضيع المواضع
-        S.finishing = false;
-        toast('⚠️ تعذّر تغيير المواضع، اضغطي "انتهى الامتحان" مرة ثانية', true);
-        return;
-      }
-      try{
-        const log = (await sget(LOG_KEY, true)) || [];
-        log.unshift({ student: S.name, date: today(), ts: Date.now(),
-          juz: touched.map(j => ({ j, name: JUZ[j-1], picks: S.picks[j] })) });
-        await sset(LOG_KEY, log.slice(0, 150));
-      }catch(e){ console.error(e); toast('⚠️ تغيّرت المواضع بس تعذّر حفظ السجل', true); S = null; modal.style.display = 'none'; return; }
-      toast('✅ انتهى الامتحان وتغيّرت مواضع ' + touched.length + ' جزء');
-    }
-    S = null; modal.style.display = 'none';
-    const lp = document.getElementById('examLogPanel');
-    if(lp && lp.style.display !== 'none') renderLog();
-  }
-
-  function closeExam(){
-    if(S && Object.values(S.picks).some(a => a.length)){
-      if(!confirm('الطالب شاف مواضع، رح نعتبر الامتحان منتهي وتتغير مواضع أجزائه. متأكدة؟')) return;
-      finish();
-    } else { S = null; modal.style.display = 'none'; }
-  }
-
-  async function renderLog(){
-    const p = document.getElementById('examLogPanel');
-    p.innerHTML = '<p class="ex-hint">جارِ التحميل...</p>';
-    const log = (await sget(LOG_KEY)) || [];
-    p.innerHTML = log.length ? log.slice(0, 20).map(l => `
-      <div class="ex-log"><div class="ex-log-h"><b>${esc(l.student)}</b><span>${esc(l.date)}</span></div>
-      ${l.juz.map(x => `<div class="ex-log-l">${esc(x.name)}: ${x.picks.map(q => `موضع ${q.slot} (${esc(q.text)})`).join('، ')}</div>`).join('')}</div>`).join('')
-      : '<p class="ex-hint" style="margin-top:8px;">ما في امتحانات لسا.</p>';
-  }
-
-  // ---- ربط الأزرار ----
-  document.getElementById('startExamBtn').addEventListener('click', openExam);
-  document.getElementById('examLogBtn').addEventListener('click', () => {
-    const p = document.getElementById('examLogPanel');
-    if(p.style.display === 'none'){ p.style.display = 'block'; renderLog(); } else p.style.display = 'none';
-  });
-  modal.querySelector('#exClose').addEventListener('click', closeExam);
-  body.addEventListener('change', e => {
-    if(e.target.matches('.ex-juz input')) body.querySelector('#exCount').textContent = '(' + body.querySelectorAll('.ex-juz input:checked').length + ')';
-  });
-  body.addEventListener('click', e => {
-    const t = e.target;
-    if(t.closest('.ex-slot')){ const b = t.closest('.ex-slot'); return reveal(+b.dataset.j, +b.dataset.s); }
-    if(t.closest('[data-rand]')) return randomPick(+t.closest('[data-rand]').dataset.rand);
-    if(t.id === 'exFinish') return finish();
-    if(t.id === 'exAll' || t.id === 'exNone'){
-      body.querySelectorAll('.ex-juz input').forEach(c => { c.checked = t.id === 'exAll'; });
-      body.querySelector('#exCount').textContent = '(' + (t.id === 'exAll' ? 30 : 0) + ')';
-      return;
-    }
-    if(t.id === 'exGo'){
-      const name = body.querySelector('#exName').value.trim();
-      const juz = [...body.querySelectorAll('.ex-juz input:checked')].map(c => +c.value);
-      if(!name){ alert('اكتبي اسم الطالب أول.'); return; }
-      if(!juz.length){ alert('اختاري جزء واحد على الأقل.'); return; }
-      S = { name, juz, picks: {}, busy: false, finishing: false };
-      renderPick();
-    }
-  });
-})();
-</script>
-<!-- ===================== نهاية قسم الامتحانات ===================== -->
 <script type="module" src="announcements.js"></script>
+
 <!-- نافذة تسجيل الدخول -->
 <div id="loginModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
   <div class="modal-content" style="background:#fff; padding:25px; border-radius:10px; width:90%; max-width:400px; text-align:right;">
@@ -2160,7 +1826,7 @@ init();
     
     <div style="margin-bottom:12px;">
       <label>اسم المستخدم:</label>
-      <input type="text" id="loginUsername" placeholder="ادخل اسم المستخدم" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;">
+      <input type="text" id="loginUsername" placeholder="مثال: sec_h1" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;">
     </div>
     
     <div style="margin-bottom:15px;">
@@ -2168,7 +1834,7 @@ init();
       <input type="password" id="loginPassword" placeholder="ادخل كلمة المرور" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;">
     </div>
     
-    <button onclick="handleLoginSubmit()" style="width:100%; padding:10px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer;">تسجيل الدخول</button>
+    <button onclick="handleLoginSubmit()" style="width:100%; padding:10px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">تسجيل الدخول</button>
   </div>
 </div>
 
@@ -2177,15 +1843,17 @@ init();
     const u = document.getElementById('loginUsername').value;
     const p = document.getElementById('loginPassword').value;
     if (u && p) {
-      loginUser(u, p);
+      if (typeof window.loginUser === 'function') {
+        window.loginUser(u, p);
+      }
     } else {
       alert('يرجى كتابة اسم المستخدم وكلمة المرور.');
     }
   }
 </script>
 
-  <!-- لوحة تحكم المشرف الرئيسي -->
-<div id="adminPanel" style="display:none; background:#f8f9fa; border:2px solid #28a745; padding:20px; margin:20px auto; max-width:800px; border-radius:80px; direction:rtl; text-align:right;">
+<!-- لوحة تحكم المشرف الرئيسي -->
+<div id="adminPanel" style="display:none; background:#f8f9fa; border:2px solid #28a745; padding:20px; margin:20px auto; max-width:800px; border-radius:16px; direction:rtl; text-align:right;">
   <h2 style="color:#28a745; text-align:center; margin-bottom:20px;">لوحة إدارة المشرف الرئيسي</h2>
   
   <!-- قسم إنشاء شعبة جديدة -->
@@ -2193,10 +1861,10 @@ init();
     <h3>إضافة شعبة جديدة وحساب معلّم</h3>
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
       <input type="text" id="newSectionName" placeholder="اسم الشعبة (مثال: شعبة الفرقان)" style="flex:1; padding:8px;">
-      <input type="text" id="newSectionUser" placeholder="اسم المستخدم" style="flex:1; padding:8px;">
+      <input type="text" id="newSectionUser" placeholder="اسم المستخدم (مثال: sec_h3)" style="flex:1; padding:8px;">
       <input type="password" id="newSectionPass" placeholder="كلمة المرور الأولية" style="flex:1; padding:8px;">
     </div>
-    <button onclick="handleCreateSection()" style="margin-top:10px; padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer;">إنشاء الشعبة والحساب</button>
+    <button onclick="handleCreateSection()" style="margin-top:10px; padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">إنشاء الشعبة والحساب</button>
   </div>
 
   <!-- قائمة الشعب الحالية -->
@@ -2205,190 +1873,60 @@ init();
     <div id="adminSectionsList" style="margin-top:10px;">جاري تحميل الشعب...</div>
   </div>
 
-  <!-- زر ترحيل البيانات القديمة (يُستخدم مرة واحدة) -->
+  <!-- زر ترحيل البيانات القديمة -->
   <div style="background:#fff3cd; padding:15px; border-radius:8px; border:1px solid #ffeeba;">
     <h4 style="margin:0 0 10px 0; color:#856404;">ترحيل البيانات القديمة</h4>
-    <p style="margin:0 0 10px 0; font-size:14px; color:#856404;">إذا كان لديك طلاب وسجلات قديمة مخزنة في الموقع قبل إضافة نظام الشعب، اضغط هنا لربطها بالشعبة الافتراضية لحمايتها من الضياع.</p>
+    <p style="margin:0 0 10px 0; font-size:14px; color:#856404;">تساعدك هذه العملية على نقل الطلاب والحلقات القديمة إلى قاعدة بيانات Firestore الموحدة.</p>
     <button onclick="migrateOldData()" style="padding:8px 15px; background:#ffc107; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">ترحيل البيانات القديمة الآن</button>
   </div>
 </div>
+
+<!-- نافذة تعديل بيانات حساب الشعبة للمشرف -->
+<div id="editSectionAccountModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:20px; max-width:400px; width:90%; border-radius:8px; text-align:right;">
+    <h3 style="margin-top:0;">تعديل بيانات حساب الشعبة</h3>
+    
+    <input type="hidden" id="editSectionId">
+    
+    <label style="display:block; margin-top:10px;">اسم الشعبة:</label>
+    <input type="text" id="editSectionName" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;">
+    
+    <label style="display:block; margin-top:10px;">اسم المستخدم الجديد:</label>
+    <input type="text" id="editSectionUser" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;">
+    
+    <label style="display:block; margin-top:10px;">كلمة المرور الجديدة (اتركها فارغة إذا لم ترد تغييرها):</label>
+    <input type="password" id="editSectionPass" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;" placeholder="••••••••">
+    
+    <div style="margin-top:20px; text-align:left; display:flex; gap:10px; justify-content:flex-end;">
+      <button type="button" onclick="closeEditModal()" style="background:#6c757d; color:#fff; padding:8px 16px; border:none; border-radius:4px; cursor:pointer;">إلغاء</button>
+      <button type="button" onclick="saveSectionAccountChanges()" style="background:#28a745; color:#fff; padding:8px 16px; border:none; border-radius:4px; cursor:pointer;">حفظ التغييرات</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
-  import { doc, setDoc, collection, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  window.handleCreateSection = function() {
+    const nameInput = document.getElementById('newSectionName');
+    const userInput = document.getElementById('newSectionUser');
+    const passInput = document.getElementById('newSectionPass');
 
-  window.migrateOldData = async function() {
-    if (!window.currentUserData || window.currentUserData.role !== 'admin') {
-      return alert('عذراً، الترحيل للمشرف فقط.');
-    }
-    if (!confirm('تم العثور على البيانات القديمة في sawaed_data! هل تريد ترحيل كافة الحلقات والطلاب للشعب الجديدة؟')) return;
+    const name = nameInput ? nameInput.value.trim() : '';
+    const user = userInput ? userInput.value.trim() : '';
+    const pass = passInput ? passInput.value.trim() : '';
 
-    const db = window.db;
-    if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
-
-    try {
-      const batch = writeBatch(db);
-      let createdSections = 0;
-      let createdStudents = 0;
-
-      // 1. ترحيل الشعب الافتراضية والحلقات من sawaed-halaqat-list
-      const sawaedDataSnap = await getDocs(collection(db, 'sawaed_data'));
-      
-      for (const dataDoc of sawaedDataSnap.docs) {
-        const docId = dataDoc.id;
-        const rawVal = dataDoc.data().value;
-        if (!rawVal) continue;
-
-        let parsedVal;
-        try { parsedVal = JSON.parse(rawVal); } catch(e) { continue; }
-
-        // أ) ترحيل الحلقات/الشعب
-        if (docId === 'sawaed-halaqat-list' && Array.isArray(parsedVal)) {
-          parsedVal.forEach(halaqa => {
-            const secRef = doc(db, 'sections', halaqa.id);
-            batch.set(secRef, {
-              name: halaqa.name,
-              username: `sec_${halaqa.id}`,
-              isActive: true,
-              createdAt: serverTimestamp()
-            }, { merge: true });
-            createdSections++;
-          });
-        }
-
-        // ب) استخراج وترحيل الطلاب من ملفات الترتيب والتكوين sawaed-order / sawaed-config
-        if (docId.startsWith('sawaed-order') || docId.startsWith('sawaed-config')) {
-          let sectionId = 'SEC_MAIN_DEFAULT';
-          if (docId.includes('-h2')) sectionId = 'h2';
-          else if (docId.includes('-h5')) sectionId = 'h5';
-
-          let studentNames = [];
-          if (Array.isArray(parsedVal)) {
-            studentNames = parsedVal; // في حالة sawaed-order
-          } else if (parsedVal && parsedVal.students && Array.isArray(parsedVal.students)) {
-            studentNames = parsedVal.students.map(s => s.name || s.studentName).filter(Boolean);
-          }
-
-          studentNames.forEach((sName, idx) => {
-            if (typeof sName === 'string' && sName.trim()) {
-              const cleanName = sName.trim();
-              const studentRef = doc(db, 'students', `std_${sectionId}_${idx}_${cleanName.replace(/\s+/g, '_')}`);
-              batch.set(studentRef, {
-                name: cleanName,
-                sectionId: sectionId,
-                createdAt: serverTimestamp()
-              }, { merge: true });
-              createdStudents++;
-            }
-          });
-        }
+    if (name && user && pass) {
+      if (typeof window.createNewSection === 'function') {
+        window.createNewSection(name, user, pass);
+      } else {
+        alert('الدالة غير معرفة في admin.js، يرجى التأكد من تحميل الملف.');
       }
-
-      // إنشاء شعبة رئيسية افتراضية في حال عدم وجودها
-      batch.set(doc(db, 'sections', 'SEC_MAIN_DEFAULT'), {
-        name: "الشعبة العامة (الافتراضية)",
-        username: "default_section",
-        isActive: true,
-        createdAt: serverTimestamp()
-      }, { merge: true });
-
-      await batch.commit();
-
-      alert(`نجح الترحيل العظيم!\n- تم إنشاء/تحديث ${createdSections} شعبة حقيقية.\n- تم ترحيل ${createdStudents} طالب بنجاح بأسماءهم وشُعبهم!`);
-      
-      if (typeof window.loadAllSections === 'function') window.loadAllSections();
-    } catch (err) {
-      console.error("خطأ أثناء الترحيل الشامل:", err);
-      alert('حدث خطأ أثناء الترحيل: ' + err.message);
+    } else {
+      alert('يرجى تعبئة كافة الحقول (اسم الشعبة، اسم المستخدم، كلمة المرور).');
     }
   };
 </script>
-<script type="module">
-  import { doc, getDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-  // الانتظار لحين اكتمال تجهيز الفايربيس
-  window.addEventListener('firebase-ready', () => {
-    const auth = window.auth;
-    const db = window.db;
-
-    if (!auth || !db) return;
-
-    auth.onAuthStateChanged(async (user) => {
-      const loginModal = document.getElementById('loginModal');
-      const adminPanel = document.getElementById('adminPanel');
-
-      if (!user) {
-        // إذا لم يكن مسجلاً، إظهار نافذة الدخول وإخفاء لوحة المشرف
-        if (loginModal) loginModal.style.display = 'flex';
-        if (adminPanel) adminPanel.style.display = 'none';
-        return;
-      }
-
-      // إخفاء نافذة تسجيل الدخول عند النجاح
-      if (loginModal) loginModal.style.display = 'none';
-
-      try {
-        // جلب بيانات الحساب باستخدام v12
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) return;
-
-        const userData = userDoc.data();
-        window.currentUserData = userData;
-
-        if (userData.role === 'admin') {
-          // حساب مشرف رئيسي: إظهار لوحة المشرف وتحميل الشعب
-          if (adminPanel) adminPanel.style.display = 'block';
-          if (typeof window.loadAllSections === 'function') {
-            window.loadAllSections();
-          }
-        } else {
-          // حساب شعبة (معلم): إخفاء لوحة المشرف
-          if (adminPanel) adminPanel.style.display = 'none';
-        }
-
-        // إعادة تحميل بيانات الطلاب المفلترة بحسب sectionId
-        if (typeof window.loadStudents === 'function') {
-          window.loadStudents();
-        }
-      } catch (err) {
-        console.error("خطأ أثناء التحقق من بيانات المستخدم:", err);
-      }
-    });
-  });
-
-  // دالة مساعدة لتصفية استعلامات الطلاب بناءً على حساب الشعبة
-  window.getFilteredStudentsQuery = function() {
-    const user = window.currentUserData;
-    const db = window.db;
-    if (!db) return null;
-
-    let queryRef = collection(db, 'students');
-
-    // إذا كان الحساب معلم، نحدد النطاق بشعبته فقط
-    if (user && user.role === 'teacher' && user.sectionId) {
-      queryRef = query(queryRef, where('sectionId', '==', user.sectionId));
-    }
-    return queryRef;
-  };
-</script>
-<!-- تهيئة Firebase v12 بالشكل الصحيح وتمرير المتغيرات -->
-<script type="module">
-  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
-  // استخدام إعدادات مشروعك المسجلة في الصفحة
-  const config = window.firebaseConfig || {};
-  const app = getApps().length > 0 ? getApps()[0] : initializeApp(config);
-
-  window.auth = getAuth(app);
-  window.db = getFirestore(app);
-
-  // إطلاق حدث يخبر بقية السكريبتات أن التهيئة اكتملت بنجاح
-  window.dispatchEvent(new Event('firebase-ready'));
-</script>
-
-<!-- تحميل ملفات النظام الخاصة بنا -->
+<!-- تحميل ملفات النظام المحدثة -->
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/admin.js"></script>
 </body>
