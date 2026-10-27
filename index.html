@@ -2166,5 +2166,85 @@ init();
   }
 </script>
 <script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+  <!-- لوحة تحكم المشرف الرئيسي -->
+<div id="adminPanel" style="display:none; background:#f8f9fa; border:2px solid #28a745; padding:20px; margin:20px auto; max-width:800px; border-radius:80px; direction:rtl; text-align:right;">
+  <h2 style="color:#28a745; text-align:center; margin-bottom:20px;">لوحة إدارة المشرف الرئيسي</h2>
+  
+  <!-- قسم إنشاء شعبة جديدة -->
+  <div style="background:#fff; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ddd;">
+    <h3>إضافة شعبة جديدة وحساب معلّم</h3>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <input type="text" id="newSectionName" placeholder="اسم الشعبة (مثال: شعبة الفرقان)" style="flex:1; padding:8px;">
+      <input type="text" id="newSectionUser" placeholder="اسم المستخدم" style="flex:1; padding:8px;">
+      <input type="password" id="newSectionPass" placeholder="كلمة المرور الأولية" style="flex:1; padding:8px;">
+    </div>
+    <button onclick="handleCreateSection()" style="margin-top:10px; padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer;">إنشاء الشعبة والحساب</button>
+  </div>
+
+  <!-- قائمة الشعب الحالية -->
+  <div style="background:#fff; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ddd;">
+    <h3>الشعب المسجلة</h3>
+    <div id="adminSectionsList" style="margin-top:10px;">جاري تحميل الشعب...</div>
+  </div>
+
+  <!-- زر ترحيل البيانات القديمة (يُستخدم مرة واحدة) -->
+  <div style="background:#fff3cd; padding:15px; border-radius:8px; border:1px solid #ffeeba;">
+    <h4 style="margin:0 0 10px 0; color:#856404;">ترحيل البيانات القديمة</h4>
+    <p style="margin:0 0 10px 0; font-size:14px; color:#856404;">إذا كان لديك طلاب وسجلات قديمة مخزنة في الموقع قبل إضافة نظام الشعب، اضغط هنا لربطها بالشعبة الافتراضية لحمايتها من الضياع.</p>
+    <button onclick="migrateOldData()" style="padding:8px 15px; background:#ffc107; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">ترحيل البيانات القديمة الآن</button>
+  </div>
+</div>
+
+<script>
+  function handleCreateSection() {
+    const name = document.getElementById('newSectionName').value;
+    const user = document.getElementById('newSectionUser').value;
+    const pass = document.getElementById('newSectionPass').value;
+    if (name && user && pass) {
+      createNewSection(name, user, pass);
+    } else {
+      alert('يرجى تعبئة كافة الحقول (اسم الشعبة، اسم المستخدم، كلمة المرور).');
+    }
+  }
+
+  // سكربت ترحيل البيانات القديمة لربطها بـ sectionId
+  async function migrateOldData() {
+    if (!window.currentUserData || window.currentUserData.role !== 'admin') {
+      return alert('عذراً، الترحيل للمشرف فقط.');
+    }
+    if (!confirm('هل تريد ترحيل جميع البيانات القديمة لربطها بالشعبة الرئيسية الافتراضية؟')) return;
+
+    try {
+      const defaultSectionId = "SEC_MAIN_DEFAULT";
+      
+      // 1. التأكد من وجود الشعبة الافتراضية
+      await firebase.firestore().collection('sections').doc(defaultSectionId).set({
+        name: "الشعبة العامة (الافتراضية)",
+        username: "default_section",
+        isActive: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // 2. تحديث الطلاب القدامى
+      const studentsSnapshot = await firebase.firestore().collection('students').get();
+      let count = 0;
+      const batch = firebase.firestore().batch();
+      
+      studentsSnapshot.forEach(doc => {
+        if (!doc.data().sectionId) {
+          batch.update(doc.ref, { sectionId: defaultSectionId });
+          count++;
+        }
+      });
+
+      await batch.commit();
+      alert(`تم الترحيل بنجاح! تم ربط ${count} طالب بالشعبة الافتراضية بدون أي فقدان للبيانات.`);
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء الترحيل: ' + err.message);
+    }
+  }
+</script>
 </body>
 </html>
