@@ -409,8 +409,20 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 
 <script type="module">
-  // --- الاتصال بقاعدة بيانات Firebase (Firestore) ---
+  // --- استيراد دوال Firebase v12 المطلوبة ---
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    doc, 
+    getDoc, 
+    setDoc, 
+    deleteDoc, 
+    collection, 
+    getDocs 
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
+  // --- الاتصال بقاعدة بيانات Firebase ---
   const firebaseConfig = {
     apiKey: "AIzaSyCW1HhqGGhkEvLk_BH1YitU0n5Eeba_qbM",
     authDomain: "sawaed-alhifaz.firebaseapp.com",
@@ -420,36 +432,46 @@ document.addEventListener('DOMContentLoaded', function(){
     appId: "1:310397595988:web:5197699fc46461097e18c1"
   };
 
+  window.firebaseConfig = firebaseConfig;
   const COLLECTION_NAME = 'sawaed_data';
 
-  try{
-    const app = initializeApp(firebaseConfig);
+  try {
+    const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // إتاحة الكائنات عالمياً للنظام وملفات auth.js و admin.js
+    window.db = db;
+    window.auth = auth;
 
     window.storage = {
-      async get(key){
+      async get(key) {
         const snap = await getDoc(doc(db, COLLECTION_NAME, key));
-        if(!snap.exists()) throw new Error('not found');
+        if (!snap.exists()) throw new Error('not found');
         return { key, value: snap.data().value, shared: true };
       },
-      async set(key, value){
+      async set(key, value) {
         await setDoc(doc(db, COLLECTION_NAME, key), { value, updatedAt: Date.now() });
         return { key, value, shared: true };
       },
-      async delete(key){
+      async delete(key) {
         await deleteDoc(doc(db, COLLECTION_NAME, key));
         return { key, deleted: true, shared: true };
       },
-      async list(prefix){
+      async list(prefix) {
         const snap = await getDocs(collection(db, COLLECTION_NAME));
         const keys = [];
         snap.forEach(d => {
-          if(!prefix || d.id.startsWith(prefix)) keys.push(d.id);
+          if (!prefix || d.id.startsWith(prefix)) keys.push(d.id);
         });
         return { keys, prefix, shared: true };
       }
     };
-  }catch(e){
+
+    // إعلام ملفات auth.js و admin.js باكتمل الجاهزية
+    window.dispatchEvent(new Event('firebase-ready'));
+
+  } catch (e) {
     console.error('تعذّر الاتصال بـ Firebase، رح يشتغل التطبيق بتخزين محلي مؤقت بدل منه:', e);
   }
 </script>
@@ -2309,7 +2331,7 @@ init();
 </script>
 
 <!-- تحميل ملفات النظام الخاصة بنا -->
-<script src="js/auth.js"></script>
-<script src="js/admin.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/admin.js"></script>
 </body>
 </html>
