@@ -2212,82 +2212,25 @@ init();
     <button onclick="migrateOldData()" style="padding:8px 15px; background:#ffc107; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">ترحيل البيانات القديمة الآن</button>
   </div>
 </div>
-
 <script type="module">
-  import { doc, setDoc, collection, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-  window.handleCreateSection = function() {
-    const name = document.getElementById('newSectionName').value;
-    const user = document.getElementById('newSectionUser').value;
-    const pass = document.getElementById('newSectionPass').value;
-    if (name && user && pass) {
-      if (typeof window.createNewSection === 'function') {
-        window.createNewSection(name, user, pass);
-      }
-    } else {
-      alert('يرجى تعبئة كافة الحقول (اسم الشعبة، اسم المستخدم، كلمة المرور).');
-    }
-  };
-
-  // سكربت ترحيل البيانات القديمة لربطها بـ sectionId (Firebase v12 الشامل)
   window.migrateOldData = async function() {
-    if (!window.currentUserData || window.currentUserData.role !== 'admin') {
-      return alert('عذراً، الترحيل للمشرف فقط.');
-    }
-    if (!confirm('هل تريد ترحيل وتربيط كل الطلاب والشعب القديمة بالشعبة الافتراضية؟')) return;
-
     const db = window.db;
     if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
 
     try {
-      const defaultSectionId = "SEC_MAIN_DEFAULT";
-      
-      // 1. إنشاء/تأكيد الشعبة الافتراضية
-      await setDoc(doc(db, 'sections', defaultSectionId), {
-        name: "الشعبة العامة (الافتراضية)",
-        username: "default_section",
-        isActive: true,
-        createdAt: serverTimestamp()
-      }, { merge: true });
+      const studentsSnap = await getDocs(collection(db, 'students'));
+      console.log("=== بداية فحص الطلاب ===");
+      console.log("إجمالي عدد المستندات في students:", studentsSnap.size);
 
-      const batch = writeBatch(db);
-
-      // 2. تحديث كافة الطلاب القدامى (سواء كان sectionId غير موجود، أو نص فارغ "")
-      const studentsSnapshot = await getDocs(collection(db, 'students'));
-      let studentCount = 0;
-      
-      studentsSnapshot.forEach(studentDoc => {
-        const sData = studentDoc.data();
-        if (!sData.sectionId || sData.sectionId.trim() === "" || sData.sectionId === "undefined") {
-          batch.update(studentDoc.ref, { sectionId: defaultSectionId });
-          studentCount++;
-        }
+      studentsSnap.forEach(doc => {
+        console.log(`طالب ID: ${doc.id} | البيانات:`, doc.data());
       });
 
-      // 3. تحديث الشعب القديمة التي لا تملك اسم مستخدم
-      const sectionsSnapshot = await getDocs(collection(db, 'sections'));
-      let sectionCount = 0;
-
-      sectionsSnapshot.forEach(sectionDoc => {
-        const secData = sectionDoc.data();
-        if (!secData.username) {
-          batch.update(sectionDoc.ref, { 
-            username: `section_${sectionDoc.id.substring(0, 5)}`,
-            isActive: true 
-          });
-          sectionCount++;
-        }
-      });
-
-      await batch.commit();
-      alert(`تم الترحيل بنجاح!\n- تم ربط ${studentCount} طالب بالشعبة الافتراضية.\n- تم تحديث ${sectionCount} شعبة قديمة.`);
-      
-      if (typeof window.loadAllSections === 'function') {
-        window.loadAllSections();
-      }
+      alert(`تم فحص ${studentsSnap.size} طالب! افتح الكونسول (F12) لرؤية التفاصيل.`);
     } catch (err) {
-      console.error("خطأ أثناء الترحيل:", err);
-      alert('حدث خطأ أثناء الترحيل: ' + err.message);
+      console.error("خطأ في الفحص:", err);
     }
   };
 </script>
