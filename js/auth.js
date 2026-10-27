@@ -1,6 +1,7 @@
 // إدارة المصادقة والجلسات - مركز حفصة القرآني
-const auth = firebase.auth();
-const db = firebase.firestore();
+// استخدام المتغيرات المعرفة من الصفحة الرئيسية
+var auth = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
+var db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
 
 // تحويل اسم المستخدم لبريد افتراضي
 function usernameToEmail(username) {
