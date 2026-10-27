@@ -8,9 +8,9 @@ import {
   doc, 
   setDoc, 
   getDoc,
-  getDocs, 
   updateDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  onSnapshot 
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 // تحويل اسم المستخدم لبريد افتراضي
@@ -18,7 +18,7 @@ function usernameToEmail(username) {
   return `${username.trim().toLowerCase()}@hafsa-quran.internal`;
 }
 
-// إنشاء شعبة جديدة وحساب مرتبط بها
+// إنشاء شعبة جديدة وحساب مرتبط بها مباشرة في الفايربيس
 window.createNewSection = async function(sectionName, username, initialPassword) {
   if (!window.currentUserData || window.currentUserData.role !== 'admin') {
     return alert('عذراً، هذه الصلاحية للمشرف الرئيسي فقط.');
@@ -28,7 +28,7 @@ window.createNewSection = async function(sectionName, username, initialPassword)
   if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
 
   try {
-    // 1. إضافة بيانات الشعبة
+    // 1. إضافة بيانات الشعبة في مجموعة sections مباشرة
     const sectionRef = await addDoc(collection(db, 'sections'), {
       name: sectionName,
       username: username,
@@ -36,10 +36,9 @@ window.createNewSection = async function(sectionName, username, initialPassword)
       createdAt: serverTimestamp()
     });
 
-    // 2. تحويل اسم المستخدم لبريد افتراضي
     const email = usernameToEmail(username);
 
-    // 3. إنشاء الحساب في Auth عبر تطبيق ثانوي لتفادي تسجيل خروج المشرف الحالي
+    // 2. إنشاء حساب Auth عبر تطبيق ثانوي لتفادي تسجيل خروج المشرف
     const mainAppConfig = window.firebaseConfig || {};
     const secondaryApp = initializeApp(mainAppConfig, "SecondaryApp_" + Date.now());
     const secondaryAuth = getAuth(secondaryApp);
@@ -50,7 +49,7 @@ window.createNewSection = async function(sectionName, username, initialPassword)
     await signOut(secondaryAuth);
     await deleteApp(secondaryApp);
 
-    // 4. حفظ ربط الحساب بالشعبة في Firestore
+    // 3. ربط الحساب بالشعبة في مجموعة users
     await setDoc(doc(db, 'users', newUid), {
       role: 'teacher',
       sectionId: sectionRef.id,
@@ -58,36 +57,46 @@ window.createNewSection = async function(sectionName, username, initialPassword)
       email: email
     });
 
-    alert(`تم إنشاء شعبة (${sectionName}) والحساب بنجاح!`);
-    window.loadAllSections();
+    alert(`تم إنشاء شعبة (${sectionName}) وحساب المعلم بنجاح على الفايربيس!`);
   } catch (error) {
     console.error('خطأ في إنشاء الشعبة:', error);
     alert('حدث خطأ أثناء إنشاء الشعبة: ' + error.message);
   }
 };
 
-// جلب وعرض جميع الشعب في لوحة المشرف
-window.loadAllSections = async function() {
-  if (!window.currentUserData || window.currentUserData.role !== 'admin') return;
+// جلب واستماع حي ومباشر (Real-time) لجميع الشعب من Firestore
+let unsubscribeSections = null;
 
+window.loadAllSections = function() {
   const db = window.db;
   if (!db) return;
 
-  try {
-    const snapshot = await getDocs(collection(db, 'sections'));
-    const listContainer = document.getElementById('adminSectionsList');
-    if (!listContainer) return;
+  const listContainer = document.getElementById('adminSectionsList');
+  if (!listContainer) return;
+
+  // إيقاف المستمع القديم إن وجد لمنع التكرار
+  if (unsubscribeSections) {
+    unsubscribeSections();
+  }
+
+  // الاستماع المباشر للتغييرات عبر الإنترنت (Real-time)
+  unsubscribeSections = onSnapshot(collection(db, 'sections'), (snapshot) => {
+    if (snapshot.empty) {
+      listContainer.innerHTML = '<p style="color:#666; text-align:center;">لا توجد شعب مسجلة حالياً في الفايربيس.</p>';
+      return;
+    }
 
     listContainer.innerHTML = '';
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const sectionId = docSnap.id;
       const item = document.createElement('div');
-      item.style.cssText = "padding:10px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;";
+      item.style.cssText = "padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;";
       item.innerHTML = `
         <div>
-          <strong>${data.name || ''}</strong> (${data.username || ''})
-          <span style="color:${data.isActive ? 'green' : 'red'}; margin-right:10px;">
+          <strong>${data.name || 'شعبة بدون اسم'}</strong> 
+          <span style="color:#666; font-size:13px;">(${data.username || ''})</span>
+          <span style="color:${data.isActive ? 'green' : 'red'}; margin-right:10px; font-weight:bold;">
             [${data.isActive ? 'مفعل' : 'معطل'}]
           </span>
         </div>
@@ -102,12 +111,13 @@ window.loadAllSections = async function() {
       `;
       listContainer.appendChild(item);
     });
-  } catch (err) {
-    console.error("خطأ في تحميل الشعب:", err);
-  }
+  }, (error) => {
+    console.error("خطأ في جلب الشعب مباشرة من الإنترنت:", error);
+    listContainer.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ في تحميل البيانات من الإنترنت (تأكد من قواعد Security Rules في الفايربيس).</p>';
+  });
 };
 
-// تفعيل أو تعطيل شعبة
+// تفعيل أو تعطيل شعبة في Firestore
 window.toggleSectionStatus = async function(sectionId, newStatus) {
   const db = window.db;
   if (!db) return;
@@ -117,15 +127,13 @@ window.toggleSectionStatus = async function(sectionId, newStatus) {
     await updateDoc(sectionDocRef, {
       isActive: newStatus
     });
-    alert('تم تغيير حالة الشعبة بنجاح.');
-    window.loadAllSections();
   } catch (error) {
     console.error(error);
-    alert('حدث خطأ أثناء تغيير الحالة.');
+    alert('حدث خطأ أثناء تغيير الحالة: ' + error.message);
   }
 };
 
-// 1. فتح نافذة تعديل حساب الشعبة
+// فتح نافذة تعديل حساب الشعبة
 window.openEditSectionModal = async function(sectionId) {
   const db = window.db;
   if (!db) return;
@@ -147,13 +155,13 @@ window.openEditSectionModal = async function(sectionId) {
   }
 };
 
-// 2. إغلاق نافذة التعديل
+// إغلاق نافذة التعديل
 window.closeEditModal = function() {
   const modal = document.getElementById('editSectionAccountModal');
   if (modal) modal.style.display = 'none';
 };
 
-// 3. حفظ التغييرات على حساب الشعبة
+// حفظ التغييرات على حساب الشعبة
 window.saveSectionAccountChanges = async function() {
   const db = window.db;
   if (!db) return;
@@ -181,21 +189,13 @@ window.saveSectionAccountChanges = async function() {
 
     alert('تم تحديث بيانات حساب الشعبة بنجاح!');
     window.closeEditModal();
-    window.loadAllSections();
   } catch (err) {
     console.error("خطأ التحديث:", err);
     alert('حدث خطأ أثناء حفظ التغييرات: ' + err.message);
   }
 };
 
-// التشغيل الذاتي عند إطلاق حدث جاهزية الفايربيس
-window.addEventListener('firebase-ready', () => {
-  if (window.currentUserData && window.currentUserData.role === 'admin') {
-    window.loadAllSections();
-  }
-});
-
-// دالة ترحيل البيانات القديمة
+// دالة ترحيل البيانات القديمة المحفوظة محلياً إلى Firestore
 window.migrateOldData = async function() {
   if (!window.currentUserData || window.currentUserData.role !== 'admin') {
     return alert('عذراً، هذه الصلاحية للمشرف الرئيسي فقط.');
@@ -231,9 +231,18 @@ window.migrateOldData = async function() {
       }
     }
 
-    alert(`تم ترحيل بيانات ${count} شعبة بنجاح إلى قاعدة البيانات!`);
+    alert(`تم ترحيل بيانات ${count} شعبة بنجاح إلى الفايربيس!`);
   } catch (error) {
     console.error('خطأ أثناء الترحيل:', error);
     alert('حدث خطأ أثناء ترحيل البيانات: ' + error.message);
   }
 };
+
+// التشغيل الذاتي والبدء بالاستماع المباشر للبيانات فور تحميل الفايربيس
+window.addEventListener('firebase-ready', () => {
+  window.loadAllSections();
+});
+
+if (window.db) {
+  window.loadAllSections();
+}
