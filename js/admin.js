@@ -194,3 +194,46 @@ window.addEventListener('firebase-ready', () => {
     window.loadAllSections();
   }
 });
+// دالة ترحيل البيانات القديمة
+window.migrateOldData = async function() {
+  if (!window.currentUserData || window.currentUserData.role !== 'admin') {
+    return alert('عذراً، هذه الصلاحية للمشرف الرئيسي فقط.');
+  }
+
+  const db = window.db;
+  if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
+
+  try {
+    const halaqatListRaw = localStorage.getItem('sawaed-halaqat-list');
+    if (!halaqatListRaw) {
+      return alert('لا توجد بيانات حلقات قديمة محفوظة في المتصفح لترحيلها.');
+    }
+
+    const halaqat = JSON.parse(halaqatListRaw);
+    let count = 0;
+
+    for (const h of halaqat) {
+      const configKey = h.id === 'h1' ? 'sawaed_sawaed-config' : `sawaed_sawaed-config:${h.id}`;
+      const configRaw = localStorage.getItem(configKey);
+      
+      if (configRaw) {
+        const configData = JSON.parse(configRaw);
+        await setDoc(doc(db, 'sections', h.id), {
+          name: h.name,
+          username: h.id === 'h1' ? 'sec_h1' : (h.id === 'h2' ? 'sec_h2' : h.id),
+          isActive: true,
+          students: configData.students || [],
+          groupLink: configData.groupLink || '',
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        count++;
+      }
+    }
+
+    alert(`تم ترحيل بيانات ${count} شعبة بنجاح إلى قاعدة البيانات!`);
+  } catch (error) {
+    console.error('خطأ أثناء الترحيل:', error);
+    alert('حدث خطأ أثناء ترحيل البيانات: ' + error.message);
+  }
+};
+
