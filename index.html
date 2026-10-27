@@ -2213,44 +2213,52 @@ init();
   </div>
 </div>
 
-<script>
-  function handleCreateSection() {
+<script type="module">
+  import { doc, setDoc, collection, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+  window.handleCreateSection = function() {
     const name = document.getElementById('newSectionName').value;
     const user = document.getElementById('newSectionUser').value;
     const pass = document.getElementById('newSectionPass').value;
     if (name && user && pass) {
-      createNewSection(name, user, pass);
+      if (typeof window.createNewSection === 'function') {
+        window.createNewSection(name, user, pass);
+      }
     } else {
       alert('يرجى تعبئة كافة الحقول (اسم الشعبة، اسم المستخدم، كلمة المرور).');
     }
-  }
+  };
 
-  // سكربت ترحيل البيانات القديمة لربطها بـ sectionId
-  async function migrateOldData() {
+  // سكربت ترحيل البيانات القديمة لربطها بـ sectionId (Firebase v12)
+  window.migrateOldData = async function() {
     if (!window.currentUserData || window.currentUserData.role !== 'admin') {
       return alert('عذراً، الترحيل للمشرف فقط.');
     }
     if (!confirm('هل تريد ترحيل جميع البيانات القديمة لربطها بالشعبة الرئيسية الافتراضية؟')) return;
 
+    const db = window.db;
+    if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
+
     try {
       const defaultSectionId = "SEC_MAIN_DEFAULT";
       
       // 1. التأكد من وجود الشعبة الافتراضية
-      await firebase.firestore().collection('sections').doc(defaultSectionId).set({
+      const sectionDocRef = doc(db, 'sections', defaultSectionId);
+      await setDoc(sectionDocRef, {
         name: "الشعبة العامة (الافتراضية)",
         username: "default_section",
         isActive: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: serverTimestamp()
       }, { merge: true });
 
-      // 2. تحديث الطلاب القدامى
-      const studentsSnapshot = await firebase.firestore().collection('students').get();
+      // 2. تحديث الطلاب القدامى باستخدام Batch v12
+      const studentsSnapshot = await getDocs(collection(db, 'students'));
       let count = 0;
-      const batch = firebase.firestore().batch();
+      const batch = writeBatch(db);
       
-      studentsSnapshot.forEach(doc => {
-        if (!doc.data().sectionId) {
-          batch.update(doc.ref, { sectionId: defaultSectionId });
+      studentsSnapshot.forEach(studentDoc => {
+        if (!studentDoc.data().sectionId) {
+          batch.update(studentDoc.ref, { sectionId: defaultSectionId });
           count++;
         }
       });
@@ -2258,10 +2266,10 @@ init();
       await batch.commit();
       alert(`تم الترحيل بنجاح! تم ربط ${count} طالب بالشعبة الافتراضية بدون أي فقدان للبيانات.`);
     } catch (err) {
-      console.error(err);
+      console.error("خطأ أثناء الترحيل:", err);
       alert('حدث خطأ أثناء الترحيل: ' + err.message);
     }
-  }
+  };
 </script>
 <script type="module">
   import { doc, getDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
