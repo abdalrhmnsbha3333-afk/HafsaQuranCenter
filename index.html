@@ -2220,17 +2220,22 @@ init();
     if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
 
     try {
-      const studentsSnap = await getDocs(collection(db, 'students'));
-      console.log("=== بداية فحص الطلاب ===");
-      console.log("إجمالي عدد المستندات في students:", studentsSnap.size);
+      // فحص أحدث أسماء المجموعات المحتملة للبيانات القديمة
+      const possibleCollections = ['sawaed_data', 'data', 'users', 'sections', 'pupils', 'students_list'];
+      console.log("=== بدء فحص كافة المجموعات القديمة ===");
 
-      studentsSnap.forEach(doc => {
-        console.log(`طالب ID: ${doc.id} | البيانات:`, doc.data());
-      });
+      for (const colName of possibleCollections) {
+        const snap = await getDocs(collection(db, colName));
+        console.log(`المجموعة [${colName}]: تحتوي على ${snap.size} مستند.`);
+        if (snap.size > 0) {
+          snap.forEach(d => console.log(` - مستند (${d.id}):`, d.data()));
+        }
+      }
 
-      alert(`تم فحص ${studentsSnap.size} طالب! افتح الكونسول (F12) لرؤية التفاصيل.`);
+      alert("تم الفحص! افتح الكونسول (F12) لرؤية أسماء المجموعات التي تحتوي على بيانات.");
     } catch (err) {
-      console.error("خطأ في الفحص:", err);
+      console.error("خطأ أثناء الفحص:", err);
+      alert("حدث خطأ أثناء الفحص: " + err.message);
     }
   };
 </script>
