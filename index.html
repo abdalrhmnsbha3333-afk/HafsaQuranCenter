@@ -2246,5 +2246,55 @@ init();
     }
   }
 </script>
+<script>
+  // التحكم في عرض اللوحات وتصفية البيانات بناءً على الجلسة الحالية
+  auth.onAuthStateChanged(async (user) => {
+    const loginModal = document.getElementById('loginModal');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (!user) {
+      // إذا لم يكن مسجلاً، إظهار نافذة الدخول وإخفاء لوحة المشرف
+      if (loginModal) loginModal.style.display = 'flex';
+      if (adminPanel) adminPanel.style.display = 'none';
+      return;
+    }
+
+    // إخفاء نافذة تسجيل الدخول عند النجاح
+    if (loginModal) loginModal.style.display = 'none';
+
+    // جلب بيانات الحساب
+    const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+    if (!userDoc.exists) return;
+
+    const userData = userDoc.data();
+    window.currentUserData = userData;
+
+    if (userData.role === 'admin') {
+      // حساب مشرف رئيسي: إظهار لوحة المشرف وتنسيق البيانات
+      if (adminPanel) adminPanel.style.display = 'block';
+      loadAllSections(); // تحميل قائمة الشعب
+    } else {
+      // حساب شعبة (معلم): إخفاء لوحة المشرف
+      if (adminPanel) adminPanel.style.display = 'none';
+    }
+
+    // إعادة تحميل بيانات الطلاب المفلترة بحسب sectionId
+    if (typeof loadStudents === 'function') {
+      loadStudents();
+    }
+  });
+
+  // دالة مساعدة لتصفية استعلامات الطلاب بناءً على حساب الشعبة
+  function getFilteredStudentsQuery() {
+    const user = window.currentUserData;
+    let query = firebase.firestore().collection('students');
+    
+    // إذا كان الحساب معلم، نحدد النطاق بشعبته فقط
+    if (user && user.role === 'teacher' && user.sectionId) {
+      query = query.where('sectionId', '==', user.sectionId);
+    }
+    return query;
+  }
+</script>
 </body>
 </html>
