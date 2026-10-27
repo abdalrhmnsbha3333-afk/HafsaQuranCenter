@@ -1,85 +1,128 @@
-// لوحة تحكم المشرف - مركز حفصة القرآني
-const adminDb = firebase.firestore();
+// لوحة تحكم المشرف - مركز حفصة القرآني (Firebase v12 Modular)
+
+import { initializeApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { createUserWithEmailAndPassword, getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  setDoc, 
+  getDocs, 
+  updateDoc, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+// تحويل اسم المستخدم لبريد افتراضي
+function usernameToEmail(username) {
+  return `${username.trim().toLowerCase()}@hafsa-quran.internal`;
+}
 
 // إنشاء شعبة جديدة وحساب مرتبط بها
-async function createNewSection(sectionName, username, initialPassword) {
+window.createNewSection = async function(sectionName, username, initialPassword) {
   if (!window.currentUserData || window.currentUserData.role !== 'admin') {
     return alert('عذراً، هذه الصلاحية للمشرف الرئيسي فقط.');
   }
 
+  const db = window.db;
+  if (!db) return alert('لم يتم الاتصال بقاعدة البيانات بعد.');
+
   try {
     // 1. إضافة بيانات الشعبة
-    const sectionRef = await adminDb.collection('sections').add({
+    const sectionRef = await addDoc(collection(db, 'sections'), {
       name: sectionName,
       username: username,
       isActive: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: serverTimestamp()
     });
 
     // 2. تحويل اسم المستخدم لبريد افتراضي
-    const email = `${username.trim().toLowerCase()}@hafsa-quran.internal`;
+    const email = usernameToEmail(username);
 
-    // 3. إنشاء الحساب في Auth عبر تطبيق ثانوي لتفادي تسجيل خروج المشرف
-    const secondaryApp = firebase.initializeApp(firebase.app().options, "SecondaryApp");
-    const userCredential = await secondaryApp.auth().createUserWithEmailAndPassword(email, initialPassword);
+    // 3. إنشاء الحساب في Auth عبر تطبيق ثانوي لتفادي تسجيل خروج المشرف الحالي
+    const mainAppConfig = window.firebaseConfig || {};
+    const secondaryApp = initializeApp(mainAppConfig, "SecondaryApp_" + Date.now());
+    const secondaryAuth = getAuth(secondaryApp);
+
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, initialPassword);
     const newUid = userCredential.user.uid;
-    await secondaryApp.auth().signOut();
-    secondaryApp.delete();
+
+    await signOut(secondaryAuth);
+    await deleteApp(secondaryApp);
 
     // 4. حفظ ربط الحساب بالشعبة في Firestore
-    await adminDb.collection('users').doc(newUid).set({
+    await setDoc(doc(db, 'users', newUid), {
       role: 'teacher',
       sectionId: sectionRef.id,
       username: username
     });
 
     alert(`تم إنشاء شعبة (${sectionName}) والحساب بنجاح!`);
-    loadAllSections();
+    window.loadAllSections();
   } catch (error) {
     console.error('خطأ في إنشاء الشعبة:', error);
     alert('حدث خطأ أثناء إنشاء الشعبة: ' + error.message);
   }
-}
+};
 
 // جلب وعرض جميع الشعب
-async function loadAllSections() {
+window.loadAllSections = async function() {
   if (!window.currentUserData || window.currentUserData.role !== 'admin') return;
 
-  const snapshot = await adminDb.collection('sections').get();
-  const listContainer = document.getElementById('adminSectionsList');
-  if (!listContainer) return;
+  const db = window.db;
+  if (!db) return;
 
-  listContainer.innerHTML = '';
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const item = document.createElement('div');
-    item.style.cssText = "padding:10px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items:center;";
-    item.innerHTML = `
-      <div>
-        <strong>${data.name}</strong> (${data.username})
-        <span style="color:${data.isActive ? 'green' : 'red'}; margin-right:10px;">
-          [${data.isActive ? 'مفعل' : 'معطل'}]
-        </span>
-      </div>
-      <div>
-        <button onclick="toggleSectionStatus('${doc.id}', ${!data.isActive})" style="padding:5px 10px; cursor:pointer;">
-          ${data.isActive ? 'تعطيل' : 'تفعيل'}
-        </button>
-      </div>
-    `;
-    listContainer.appendChild(item);
-  });
-}
+  try {
+    const snapshot = await getDocs(collection(db, 'sections'));
+    const listContainer = document.getElementById('adminSectionsList');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const sectionId = docSnap.id;
+      const item = document.createElement('div');
+      item.style.cssText = "padding:10px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items:center;";
+      item.innerHTML = `
+        <div>
+          <strong>${data.name || ''}</strong> (${data.username || ''})
+          <span style="color:${data.isActive ? 'green' : 'red'}; margin-right:10px;">
+            [${data.isActive ? 'مفعل' : 'معطل'}]
+          </span>
+        </div>
+        <div>
+          <button onclick="toggleSectionStatus('${sectionId}', ${!data.isActive})" style="padding:5px 10px; cursor:pointer;">
+            ${data.isActive ? 'تعطيل' : 'تفعيل'}
+          </button>
+        </div>
+      `;
+      listContainer.appendChild(item);
+    });
+  } catch (err) {
+    console.error("خطأ في تحميل الشعب:", err);
+  }
+};
 
 // تفعيل أو تعطيل شعبة
-async function toggleSectionStatus(sectionId, newStatus) {
+window.toggleSectionStatus = async function(sectionId, newStatus) {
+  const db = window.db;
+  if (!db) return;
+
   try {
-    await adminDb.collection('sections').doc(sectionId).update({
+    const sectionDocRef = doc(db, 'sections', sectionId);
+    await updateDoc(sectionDocRef, {
       isActive: newStatus
     });
     alert('تم تغيير حالة الشعبة بنجاح.');
-    loadAllSections();
+    window.loadAllSections();
   } catch (error) {
+    console.error(error);
     alert('حدث خطأ أثناء تغيير الحالة.');
   }
-}
+};
+
+// التشغيل الذاتي عند إطلاق حدث جاهزية الفايربيس
+window.addEventListener('firebase-ready', () => {
+  if (window.currentUserData && window.currentUserData.role === 'admin') {
+    window.loadAllSections();
+  }
+});
