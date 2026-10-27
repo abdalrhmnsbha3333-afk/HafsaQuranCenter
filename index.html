@@ -2291,21 +2291,24 @@ init();
     return query;
   }
 </script>
-<!-- ربط مكتبات Firebase v12 وتجهيز المتغيرات للنظام -->
+<!-- تهيئة Firebase v12 بالشكل الصحيح وتمرير المتغيرات -->
 <script type="module">
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
   import { getFirestore } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-  // استخدام التطبيق المهيّأ أو إنشاء اتصال
-  const app = getApps().length > 0 ? getApps()[0] : initializeApp(window.firebaseConfig || {});
+  // استخدام إعدادات مشروعك المسجلة في الصفحة
+  const config = window.firebaseConfig || {};
+  const app = getApps().length > 0 ? getApps()[0] : initializeApp(config);
 
-  // إتاحة الكائنات عالمياً لملفات النظام
   window.auth = getAuth(app);
   window.db = getFirestore(app);
+
+  // إطلاق حدث يخبر بقية السكريبتات أن التهيئة اكتملت بنجاح
+  window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
-<!-- ملفات النظام الخاصة بنا -->
+<!-- تحميل ملفات النظام الخاصة بنا -->
 <script src="js/auth.js"></script>
 <script src="js/admin.js"></script>
 </body>
