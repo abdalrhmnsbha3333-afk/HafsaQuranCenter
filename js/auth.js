@@ -1,7 +1,19 @@
-// إدارة المصادقة والجلسات - مركز حفصة القرآني
-// استخدام المتغيرات المعرفة من الصفحة الرئيسية
-var auth = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
-var db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
+// إدارة المصادقة والجلسات - مركز حفصة القرآني (Firebase v12 Modular)
+
+// استدعاء الدوال المطلوبة من مكتبات v12 مباشرة
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  EmailAuthProvider, 
+  reauthenticateWithCredential, 
+  updatePassword, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import { 
+  doc, 
+  getDoc 
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 // تحويل اسم المستخدم لبريد افتراضي
 function usernameToEmail(username) {
@@ -9,15 +21,21 @@ function usernameToEmail(username) {
 }
 
 // تسجيل الدخول
-async function loginUser(username, password) {
+window.loginUser = async function(username, password) {
   try {
+    const auth = window.auth;
+    const db = window.db;
+    if (!auth || !db) throw new Error("لم يتم تهيئة Firebase بعد.");
+
     const email = usernameToEmail(username);
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // جلب صلاحيات المستخدم
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    if (!userDoc.exists) {
+    // جلب صلاحيات المستخدم من Firestore v12
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
       throw new Error('لم يتم العثور على بيانات الحساب.');
     }
 
@@ -30,45 +48,68 @@ async function loginUser(username, password) {
     alert('فشل تسجيل الدخول: اسم المستخدم أو كلمة المرور غير صحيحة.');
     console.error(error);
   }
-}
+};
 
 // تسجيل الخروج
-function logoutUser() {
-  auth.signOut().then(() => {
+window.logoutUser = function() {
+  const auth = window.auth;
+  if (!auth) return;
+  
+  signOut(auth).then(() => {
     sessionStorage.clear();
     location.reload();
   });
-}
+};
 
 // تغيير كلمة المرور للحساب الحالي
-async function changeOwnPassword(currentPassword, newPassword) {
-  const user = auth.currentUser;
-  if (!user) return alert('يجب تسجيل الدخول أولاً.');
+window.changeOwnPassword = async function(currentPassword, newPassword) {
+  const auth = window.auth;
+  if (!auth || !auth.currentUser) return alert('يجب تسجيل الدخول أولاً.');
 
   if (newPassword.length < 6) {
     return alert('كلمة المرور يجب أن تكون 6 خانات على الأقل.');
   }
 
   try {
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-    await user.reauthenticateWithCredential(credential);
-    await user.updatePassword(newPassword);
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
     alert('تم تغيير كلمة المرور بنجاح.');
   } catch (error) {
     alert('حدث خطأ: التأكد من كلمة المرور الحالية غير صحيح.');
+    console.error(error);
   }
+};
+
+// تهيئة ومراقبة حالة الجلسة
+function setupAuthObserver() {
+  const auth = window.auth;
+  const db = window.db;
+
+  if (!auth || !db) return;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          window.currentUserData = data;
+          console.log('مرحباً بك:', data.username, '| الدور:', data.role);
+        }
+      } catch (err) {
+        console.error("خطأ في جلب بيانات المستخدم:", err);
+      }
+    } else {
+      window.currentUserData = null;
+    }
+  });
 }
 
-// مراقبة حالة الجلسة
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    if (userDoc.exists) {
-      const data = userDoc.data();
-      window.currentUserData = data;
-      console.log('مرحباً بك:', data.username, '| الدور:', data.role);
-    }
-  } else {
-    window.currentUserData = null;
-  }
-});
+// الانتظار لحين تهيئة window.auth من الصفحة الرئيسية
+window.addEventListener('firebase-ready', setupAuthObserver);
+if (window.auth && window.db) {
+  setupAuthObserver();
+}
